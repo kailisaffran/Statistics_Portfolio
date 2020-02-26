@@ -2,10 +2,10 @@
 This reflects my ability to do all of the things required by the learning outcomes in St. John Fisher's Statistics program.
 
 - Goal 1: Statistial Methods and Theory
- + Outcome 1.1: Design a study capable of testing a causal hypothesis and explain how study design is related to evidence for and conclusions about a hypothesis
- + Outcome 1.2: Use graphical methods to summarize univariate and bivariate distributions and develop insights through graphical data summaries
- + Outcome 1.3: Demonstrate competency in fitting and interpreting statistical models for both continuous and categorical outcome variables
- + Outcome 1.4: Use resampling methods for statistical inference, including parameter estimation and hypothesis testing
+  + Outcome 1.1: Design a study capable of testing a causal hypothesis and explain how study design is related to evidence for and conclusions about a hypothesis
+  + Outcome 1.2: Use graphical methods to summarize univariate and bivariate distributions and develop insights through graphical data summaries
+  + Outcome 1.3: Demonstrate competency in fitting and interpreting statistical models for both continuous and categorical outcome variables
+  + Outcome 1.4: Use resampling methods for statistical inference, including parameter estimation and hypothesis testing
  
  - Goal 2: Data Science
  + Outcome 2.1: Develop fluency in one statistical programming language and gain familiarity with a second language
