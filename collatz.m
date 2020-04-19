@@ -1,2 +1,0 @@
-function out=collatz(n)  count=0;  even=0;  odd=0;  initial=n;  bigger=0;  large=n;    while n>1    m=cz(n); %even and odd occur here    if (m>n)      odd=odd+1;    else      even=even+1;    endif    count=count+1;    n=m;    if (n>initial)      bigger=bigger+1;    endif;    if (n>large)      large=n;    endif;    %disp(n);  endwhile;  out=[count,even,odd,bigger,large]
-endfunction;
