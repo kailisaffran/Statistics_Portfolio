@@ -1,5 +1,5 @@
 # Statistics_Portfolio
-This reflects my ability to do all of the things required by the learning outcomes in St. John Fisher's Statistics program. The files for each goal are organized under supplementary branches labeled Goal_1 to Goal_5.
+This reflects my ability to do all of the things required by the learning outcomes in St. John Fisher's Statistics program. The corresponding files for each goal are organized under supplementary branches labeled Goal_1 to Goal_5.
 
 - Goal 1: Statistial Methods and Theory
   + Outcome 1.1: Design a study capable of testing a causal hypothesis and explain how study design is related to evidence for and conclusions about a hypothesis
