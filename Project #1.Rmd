@@ -1,0 +1,131 @@
+---
+title: "Memory and Music"
+author: "Kaili Saffran"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(mosaic)
+library(data.table)
+
+rm(list=ls())
+```
+
+#Introduction
+
+1) In this study, we want to answer the question *Does listening to dance music improve memory?*. I am interested in studying this hypothesis because many individuals try to learn songs they like and know all the words to their favorite songs. I believe it might be possible to improve memory and the ability to remember words just by listening to music.  
+
+#Methodology
+
+The purpose of this study was to determine if listening to music has an effect on memory. I expect that listening to music (specifically, dance music) will increase the ability to memorize a list of words in 30 seconds. Therefore, after listening to dance music for 10 minutes, subjects will get correctly identify more words than those who did not listen to dance music for 10 minutes. 
+
+###Measurement
+
+1. Population of interest:  Islanders
+2. Response Variable(s):  The number of correctly memorized words in a memory test vocabulary task. (Level of Measurement: 20 total words)
+3. Independent Variable(s):  Whether the subject listened to dance music for 10 minutes.
+4. Extraneous variables that might influence the results & how we will control for this: I did not control for gender. However, this should not make much of difference.  
+
+###Design
+
+This experiment follows the true experimental design method, as show below  
+
+            Pre-test  Treatment     Post-test
+-------     -------- -----------   -----------
+     R          O1        X             O2
+                O3                      O4
+-------     -------- -----------   -----------
+This design controls for the following threats to validity: Selection Bias, Testing Effect.  
+
+We could not control for these threats to validity: Maturation/Subject Characteristics. Some of the subjects may have just been naturally better at the memory vocabulary test or some subjects may have just improved from taking the test twice.   
+
+###Sample/Randomization Method
+
+I performed a simplified random sample by first randomly choosing one city in the Islands of my choice. I took a random sample of the houses in Nelson to include the subjects who would be part of the control group and another random sample of the houses in Nelson using a different seed which contains the subjects for the treatment group. Using one city controls for the possible confounding variable that one city may have better memory than another. Next, I randomly chose 20 houses from each city to place in the control and treatment groups. If Islanders refused to participate in my study or if a house was vacant based on the random sample I took, I choose the next highest numbered house to select my subject from. I also controlled for age and did not take any Islanders less than 15 years of age or greater than 70 years of age since children may not know as many words and because memory has the risk of getting worse as you age.
+
+```{r}
+set.seed(2018)
+#Nelson=Control
+sample(1:470,20,replace=F)
+
+set.seed(2019)
+#Nelson=Treatment
+sample(1:470,20,replace=F)
+```
+
+#Data 
+
+```{r}
+getwd()
+setwd("/Users/kailisaffran/Documents/Spring 2019/Experimental Design")
+
+df <- fread("/Users/kailisaffran/Documents/Spring 2019/Experimental Design/Project 1 data.csv")
+```
+
+### Descriptive Statistics
+
+```{r}
+favstats(~Memory | Group + PrePost, data=df)
+```
+The mean of the control pretest group is 16.60 and the mean of the control postest group is 16.75. The effect size between the control group averages is 0.15. The mean of the treatment pretest group is 17.50 and the mean of the treatment postest group is 17.95. The effect size for the treatment subjects is 0.45. We can see the treatment group had a greater average increase in the number of correctly memorized words than the control group, but it does not seem to be great enough to be statistically significant.
+
+```{r}
+boxplot(Memory~PrePost,data=df)
+boxplot(Memory~Group,data=df)
+```
+I used boxplots to visualize the data since I am working with one categorical and one numeric value. When comparing the results of the memory test to the PrePost variable, we can see the medians are pretty much identical, but the pretest results are not as consistent to one another as in the results from the postest. The boxplot seems to show that almost all Islanders performed better or consistent to what they scored on the memory test the first time. When comparing the results of the memory test to the Group, once again, the medians are pretty much equal, but the treatment group seemed to have higher scores overall. The question is whether this was the results of the independent variable (listening to dance music) or just a result of the way the subjects were sampled.
+
+```{r}
+#Make a treatment and control group
+df.treatment <- filter(df, Group=="Treatment")
+df.control <- filter(df, Group=="Control")
+```
+I divided the data into two data sets. One containing all the results from the treatment group and one containing all the results from the control group. This allows a t.test to be performed to test my hypothesis and determine whether a testing effect may be present. 
+
+```{r}
+boxplot(Memory~PrePost, data=df.treatment)
+boxplot(Memory~PrePost, data=df.control)
+```
+The boxplot of the treatment group data shows the posttest median to be slightly higher than the pretest median for how many words were correctly identified in a memory test. The pretest contains a greater range of data values as well compared to the postest. In the boxplot of the control group data, the data is almost identical, with a wider range of results for the pretest.
+
+#Results
+
+##Treatment Effect
+
+Let $mu_1$ = the average difference in the number of words correctly memorized by the treament group.  
+
+H0:  $\mu_1 = 0$     
+Ha:  $\mu_1 > 0$ (assuming Post - Pre)
+
+```{r}
+t.test(Memory~PrePost,data=df.treatment,paired=TRUE,alternative="greater")
+```
+Using a significance level of 0.05, a p-value of 0.10 indicates we have to fail to reject the null hypothesis that the average difference in the number of words correctly identified in the memory test by the treatment group is equal to 0. There is not significance evidence to say that listening to dance music increases the ability to memorize words better. The 95% confidence interval says that we can say with 95% confidence that the average difference between the scores of the pretest and postest is between -0.14 and infinity.
+
+#Results
+
+##Control Effect
+
+Let $mu_1$ = the average difference in the number of correctly memorized words by the control group.  
+
+H0:  $\mu_1 = 0$     
+Ha:  $\mu_1 \ne 0$ (assuming Post - Pre)
+
+```{r}
+t.test(Memory~PrePost,data=df.control,paired=TRUE,alternative="two.sided")
+```
+Using a significance level of 0.05, a p-value of 0.80 fails to reject the null hypothesis that the average difference in the number of correctly identified words in the memory test by the control group is equal to 0. There is not enough evidence to support the alternative hypothesis that the average difference is not equal to zero. This results is supported by what was seen in the descriptive statistcs that showed how close the pre and postest results were to one another. We can say with 95% confidence that the average difference between the scores for the pretest and postest of the control group is between -1.07 and 1.37.
+
+##Permutation Test
+
+```{r}
+observed <- diffmean(Memory~PrePost, data=df.treatment); observed
+null.distribution <- do(1000)*diffmean(Memory~shuffle(PrePost), data=df.treatment)
+histogram(~diffmean, data=null.distribution, xlab="Difference in Means", v=observed)
+p.value <- prop(~diffmean<=observed, data=null.distribution); p.value
+```
+I performed a permutation test to create a random simulation with more samples from my treatment group to test the effect of the independent variable on memory. Through this simulation, it can be seen that the effect size for the difference in mean score on the memory vocabulary test is consistent to being between -2 and 2. The histogram shows a fairly normal distribution in the effect size since there is not much skewness. This simulation calculated a p-value of 0.27, which is even greater than the p-value calculated from the t.test for the treatment group above. Therefore, this further concludes that the average difference in mean scores on the memory test is equal to 0 and is not statistically significant enough to support the alternative hypothesis that the average difference in means is greater than 0.
+
+#Reflection 
+Through performing this experiment, it can be seen that listening to music does not have an effect on the ability to memorize. It was difficult conducting this experiment and getting a randomized sample of subjects. However, most of the subjects cooperated and not many declined giving consent for the study. The only difficult part was adjusting the sample to deal with age and vacancy of homes. By performing a t.test on the control group, it is possible that a testing effect was present. Almost all of the Islanders improved their scores between the pretest and postest, which can not factor out the possibilty of maturation and the subjects getting better through practice. However, while both the control group and treatment group had positive average differences, the treatment group had a slightly higher average difference. This study would have been better if a larger sample was used and see if the trends are consistent with what I found or if a greater effect size may occur with a larger sample. In a future study, I could also adjust my independent variable and use another type of music, such as country or classical music.
