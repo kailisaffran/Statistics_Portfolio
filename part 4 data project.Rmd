@@ -1,0 +1,151 @@
+---
+title: "Part IV Data Analytic Project"
+author: "Kaili Saffran"
+date: "4/22/2018"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Introduction
+I am interested in the BD. Rate variable because it can lead to alcoholism which is a topic that is discussed in one of my current college courses, ‘Death & Dying Ethical Consc.’ Also, alcoholism runs in my family’s history. There are many factors that can contribute to binge drinking which would make this variable interesting and easy to work with. I seek to answer the question, is there a relationship between low income households and binge drinking? 
+
+# Hypothesis and Project Plan
+I hypothesis that as low income increases in households, the percentage of binge drinking in adults increases. The null hypothesis is that there is no association between the two variables and that one does not affect the other. My thought process behind my research hypothesis is that lower income households experience more stress and therefore, adults will turn to drinking to relieve it. By not bringing in as much income, adults will not be able to provide for their family as well and could risk losing their home.  
+
+If my hypothesis is accurate I should see in my results that in counties with low income households, the percentage of binge drinking in adults will increase. A low p-value will support my research hypothesis, by rejecting the null that there is no association between the two variables. Whereas, a high p-value will refute my hypothesis by failing to reject the null. I will perform a paired means test since I am working with quantitative data. I will get the most informative results with a paired means test because I will be looking at the same observational units for both variables (counties). With this test I should get a lower p-value and narrower confidence interval. I will be looking at the same counties for both binge drinking percentages among adults and low income households. The difference in means statistic will be used to analyze my data. I will create a histogram to look at the difference in paired means so I can find the observed value to assist calculating my p-value. Histograms for each individual variable would be useful in finding outliers and skewness in the data that would be hard to determine from the charts. Favstats will be a useful command as well to analyze, seperately, the data of low income households and data of binge drinking among adults. I will be able to compare the median to mean, generate max and min values and the range, and look at the sample size to see how significant it is to my test. I could also use a boxplot to compare the percentage of binge drinking in adults and low income households to an individual county. Finally, I will generate a 95% confidence interval, since it is a very common interval to use, to see where the mean difference population parameter lies.
+
+# Response Variable 
+```{r}
+library(dplyr)
+county.data<-read.csv("/Users/kailisaffran/Documents/Intro to DS/county level data.csv")
+hist(county.data$BD.Rate, main="Binge Drinking in Adults", xlab="Percentage of adults that report binge drinking per county", ylab="Frequency")
+```
+
+The mean of the binge drinking data is 13.62 in a sample size of 2608. This says that the average percent of adults that report binge drinking in 2608 counties is 13.62%. The median was 14. Because mean < median, the distribution is slightly skewed left. But, by looking at the histogram, it almost looks as though the graph is skewed right. Therefore, the distribution is probably affected by many outliers, which is true since there are 534 unrecorded points. The majority of adults who report binge drinking appears to be between 5% and 20%. The range is 35, since the max percentage value was 35 and the min was 0. The standard deviation of the respone variable is 5.18. Therefore, the sample mean is 5.18 standard deviations above the population mean under the null.
+
+# Explanatory Variables
+```{r}
+library(mosaic)
+state.data<-read.csv("/Users/kailisaffran/Documents/Intro to DS/state level data.csv")
+favstats(state.data$cbret)
+hist(state.data$cbret, main="State Control of Retail Sales of Beer", xlab="Proportion of control of retail sales of beer per state", ylab="Frequency")
+```
+This is the distribution of a categorical variable since the max is 1 and the min is 0. There is either state control of retail sales of beer or no control at all. The histogram above shows a distribution of 27 percent and a mean of 8 percent.
+
+```{r}
+favstats(state.data$cblue)
+hist(state.data$cblue, main="Bans on Off-Premises Sunday Sales of Alcohol", xlab="Proportion of bans on off-premises sales of alcohol per state", ylab="Frequency")
+```
+This is also a categorical variable distribution because there is either a ban or no ban on off-premises sales of alcohol per state. The mean of the distribution is 28 percent and the standard deviation of the histogram is 45 percent. 
+
+```{r}
+favstats(state.data$hhincome2014)
+hist(state.data$hhincome2014, main="Household Income", xlab="Median household income per state (in dollars)", ylab="Frequency")
+```
+The distribution of this quantitative variable is skewed right. It appears to be centered at $52,302.50. It has a variance of 8,831.85 dollars, which is the standard deviation. The range is 34,685.00 dollars. 
+
+```{r}
+favstats(county.data$SP.Households)
+hist(county.data$SP.Households, main="Single Parent Households", xlab="Percentage of single parent households per county", ylab="Frequency")
+```
+The distribution is slightly skewed right. It is centered at 8 percent. The standard deviation is 2.77 percent within a sample of 3,141 counties. The range of percentage of single parent housholds per county is 28 percent. 
+
+# Bivariate Analysis
+```{r}
+merged.data<-read.csv("/Users/kailisaffran/Documents/Intro to DS/merged data.csv")
+histogram(~BD.Rate | cbret, data = merged.data)
+favstats(BD.Rate ~ cbret, data = merged.data)
+boxplot(BD.Rate ~ cbret, data = merged.data)
+observed <- diffmean(BD.Rate ~ cbret, data = merged.data, na.rm=TRUE)
+null.distribution <- do(1000)*diffmean(BD.Rate ~ shuffle(cbret), data = merged.data, na.rm=TRUE)
+histogram(~diffmean, data = null.distribution, xlab = "Difference in Means", v = observed)
+p.value <- prop(~diffmean>=observed, data = null.distribution); p.value
+```
+
+The distributions between those states that have control over retail sales of beer and those who do not have control in relationship to binge drinking among adults is quite similar. The centers of the distributions are around 15 percent with similar standard deviations around 5 percent as seen in the histograms. The boxplot also supports these conclusions that the distributions of the variables have similar medians and standard deviations. But, there are more outliers in those states that do not have control over retail sales of beer in relation to binge drinking. The p-value was 0.06 and therefore there is not sufficient evidence to reject the null. I fail to reject the null that there is no relationship between cbret and BD.Rate.   
+
+```{r}
+histogram(~BD.Rate | cblue, data = merged.data)
+favstats(BD.Rate ~ cblue, data = merged.data)
+boxplot(BD.Rate ~ cblue, data = merged.data)
+observed <- diffmean(BD.Rate ~ cblue, data = merged.data, na.rm=TRUE)
+null.distribution <- do(1000)*diffmean(BD.Rate ~ shuffle(cblue), data = merged.data, na.rm=TRUE)
+histogram(~diffmean, data = null.distribution, xlab = "Difference in Means", v = observed)
+p.value <- prop(~diffmean<=observed, data = null.distribution); p.value
+```
+
+The distributions between those states that have bans on off-premises Sunday sales of alcohol and those who do not in relation to binge drinking among American adults varies slightly. The centers of the distributions for those that have no ban is 15 percent, whereas the median for those who do have a ban on sales of alcohol is 11 percent. However, the standard deviations between the two variables are very similar at 4.9 percent approximately. They have similar variability. These results are supported by the histograms and boxplots of cblue and BD.Rate. A p-value of 0 allows me to reject the null that there is no relationship between the variables. There is very strong evidence against the null.  
+
+```{r}
+merged.data2 <- na.omit(merged.data)
+favstats(~BD.Rate, data=merged.data2); favstats(~hhincome2014, data=merged.data2)
+histogram(~BD.Rate, data=merged.data2); histogram(~hhincome2014, data=merged.data2)
+differences <- merged.data2$BD.Rate-merged.data2$hhincome2014
+n <- length(differences)
+signs <- sample(c(1,-1), n, replace = TRUE)
+null.distribution <- NULL
+for (i in 1:1000) {na.rm=TRUE
+  signs <- sample(c(1,-1), n, replace = TRUE)
+  flip <- differences * signs
+  null.distribution[i] <- mean(flip)
+}
+observed <- mean(~BD.Rate-hhincome2014, data = merged.data2); observed
+histogram(null.distribution, xlab = "Difference in Paired Means", v = observed)
+p.value <- prop(null.distribution<=observed); p.value
+confint(null.distribution, level = .95)
+```
+
+BD.Rate represents more of a normal distribution, whereas hhincome2014 is skewed right. Their medians differ significantly because median household income is in the ten thousands, so it's median is $49,342 and binge drinking rate has a median of 11 percent. The standard deviation for hhincome2014 is 7,447 dollars and for BD.Rate it is 5 percent. The p-value of 0 indicates very strong evidence against the null, therefore there is sufficient evidence to support a relationship between the two variables.
+
+```{r}
+merged.data2 <- na.omit(merged.data)
+favstats(~BD.Rate, data=merged.data2); favstats(~SP.Households, data=merged.data2)
+histogram(~BD.Rate, data=merged.data2); histogram(~SP.Households, data=merged.data2)
+differences <- merged.data2$BD.Rate-merged.data2$SP.Households
+n <- length(differences)
+signs <- sample(c(1,-1), n, replace = TRUE)
+null.distribution <- NULL
+for (i in 1:1000) {na.rm=TRUE
+  signs <- sample(c(1,-1), n, replace = TRUE)
+  flip <- differences * signs
+  null.distribution[i] <- mean(flip)
+}
+observed <- mean(~BD.Rate-SP.Households, data = merged.data2); observed
+histogram(null.distribution, xlab = "Difference in Paired Means", v = observed)
+p.value <- prop(null.distribution>=observed); p.value
+```
+
+Once again the BD.Rate data has a normal distribution, as opposed to the SP.Households distribution which is skewed right. The centers of the distributions are close but not similar. Single parent households have a median of 9 percent and binge drinking rate has a median of 14 percent. SP.Households data has a standard deviation of 2.7 percent and BD.Rate is 5 percent. BD.Rate has more variability in it's distribution. A p-value of 0 has very strong evidence against the null and therefore we can support that there is a relationship between the variables by rejecting the null hypothesis. 
+
+# Multivariate Analysis
+```{r}
+model <- lm(BD.Rate~cbret+cblue+hhincome2014+SP.Households, data=merged.data); model
+null.distribution <- do(1000)*lm(shuffle(BD.Rate)~cbret+cblue+hhincome2014+SP.Households, data=merged.data)
+rsquared(model)
+```
+
+For every one-unit increase in the state control of retail sales of beer, there is a 0.19 percent increase in binge drinking rates among adults. For every one-unit increase in bans on off-premises sunday sales of alcohol, there is a 2.42 percent decrease in binge drinking rates among adults. For every one dollar increase in median household income, there is a 0.0002 percent increase in binge drinking amoung adults. For every one percent increase in single parent households, there is a 0.19 percent decrease in binge drinking among adults.  
+
+```{r}
+histogram(~cbret, data=null.distribution, xlab="Slope Coefficients", v=0.1874)
+prop(~cbret>=0.1874, data=null.distribution)
+
+histogram(~cblue, data=null.distribution, xlab="Slope Coefficients", v=-2.4177)
+prop(~cblue<=-2.1477, data=null.distribution)
+
+histogram(~hhincome2014, data=null.distribution, xlab="Slope Coefficients", v=0.0002)
+prop(~hhincome2014>=0.0002, data=null.distribution)
+
+histogram(~SP.Households, data=null.distribution, xlab="Slope Coefficients", v=-0.1893)
+prop(~SP.Households<=-0.1893, data=null.distribution)
+```
+
+The null hypothesis is that there is no relationship between median household income and binge drinking rates among adults is rejected at a p-value of 0. There is sufficient evidence to support the alternative that there is a relationship between hhincome2014 and BD.Rate.
+
+#Conclusion
+My results were significant because it is taken from a reliable source and the p-value came to be 0 which is significant in rejecting the null hypothesis and supporting my alternative that there is a relationship between the binge drinking rate among adults and median household income. There is a large effect because the confidence interval ranges from -2,196.28 to 2,241.82. I am 95% confident that the population parameters lie within this interval. Causation cannot be determined since this an observational study. I cannot generalize these results to the American adult population, but can to the National Conference of State Legislatures because this is where the data was taken from. This national study was a convenient sample, making it biased. Also, the median household income shows incomes for upper middle class adults, not the entire American adult population. If it did, we would see incomes at much higher and lower values. 
