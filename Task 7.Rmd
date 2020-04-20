@@ -1,0 +1,150 @@
+---
+title: "Task 7"
+author: "Kaili Saffran"
+date: "2/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+```{r, warning=FALSE}
+# initial conditions:
+start.dollars <- 8
+p <- .4
+win.dollars <- 10
+
+# build the transition matrix:
+P <- matrix(0, nrow = win.dollars + 1, ncol = win.dollars + 1)
+P[1, 1] = 1
+P[win.dollars + 1, win.dollars + 1] = 1
+
+for (j in 2:win.dollars) {
+  # subdiagonal - probability of losing:
+  P[j, j - 1] = 1 - p
+  # superdiagonal - probability of winning:
+  P[j, j + 1] = p
+}
+```
+
+# Question 2-4
+```{r, warning=FALSE}
+set.seed(1025)
+
+# create a function for gambling at the casino, R number of times:
+Gambling <- function(R, starting_dollars, p) {
+
+win.dollars <- 10
+P <- matrix(0, nrow = win.dollars + 1, ncol = win.dollars + 1)
+P[1, 1] = 1
+P[win.dollars + 1, win.dollars + 1] = 1
+
+for (j in 2:win.dollars) {
+  P[j, j - 1] = 1 - p
+  P[j, j + 1] = p
+}
+
+Result <- data.frame("Done" = rep("Not Broke", R), "Moves" = rep(0, R))
+
+# create for loop that simulates gambling:
+for (i in 1:R) {
+  # match state of transition matrix by adding 1 to the starting position:
+  current.place <- starting_dollars + 1
+  # initial condition for number of moves is 0:
+  num.moves <- 0
+  # inital condition for result is "not broke":
+  result <- "Not Broke"
+  # keep running simulation while you have more than $0 and less than $10:
+  while (current.place > 1 & current.place < 11) {
+    # sample through transition matrix:
+    current.place <- sample(c(1:ncol(P)), 1, prob =  P[current.place,])
+    # add a move after you complete a move:
+    num.moves <- num.moves + 1
+    # if current place is equal to 1, then result becomes "broke":
+    if (current.place == 1) {
+      result <- "Broke"
+    }
+  }
+  # record if he went broke:
+  if (result == "Broke") {
+    Result$Done[i] <- 0
+  }
+  # record number of moves taken until simulation ended:
+  Result$Moves[i] <- num.moves
+}
+
+# calculate fraction of simulations that ended in going broke:
+Prob <- length(Result$Done[Result$Done != "Not Broke"]) / R
+
+Mean <- mean(Result$Moves)
+Std.dev <- sd(Result$Moves)
+
+# print out results:
+print(paste("The probability of going broke when starting at", starting_dollars, "dollars is", Prob))
+print(paste("The mean number of bets this person placed is", Mean))
+print(paste("The standard deviation of the number of bets this person placed is", Std.dev))
+}
+
+Gambling(1000, 8, 0.4)
+```
+
+# Question 5
+```{r, warning= FALSE}
+# probability of going broke at each starting dollar value:
+Prob1 <- Gambling(1000, 1, .4)
+Prob2 <- Gambling(1000, 2, .4)
+Prob3 <- Gambling(1000, 3, .4)
+Prob4 <- Gambling(1000, 4, .4)
+Prob5 <- Gambling(1000, 5, .4)
+Prob6 <- Gambling(1000, 6, .4)
+Prob7 <- Gambling(1000, 7, .4)
+Prob8 <- Gambling(1000, 8, .4)
+Prob9 <- Gambling(1000, 9, .4)
+```
+
+# Question 6
+```{r, warning=FALSE}
+# probability of going broke for starting with $5 and different winning probabilities:
+P1 <- Gambling(1000, 5, 0.1)
+P2 <- Gambling(1000, 5, 0.2)
+P3 <- Gambling(1000, 5, 0.3)
+P4 <- Gambling(1000, 5, 0.4)
+P5 <- Gambling(1000, 5, 0.5)
+P6 <- Gambling(1000, 5, 0.6)
+P7 <- Gambling(1000, 5, 0.7)
+P8 <- Gambling(1000, 5, 0.8)
+P9 <- Gambling(1000, 5, 0.9)
+```
+
+# Question 7
+```{r}
+# initial conditions:
+R = 1000
+start.dollars = 8
+
+# create empty vector to store how much money you have:
+States <- c()
+# simulate through transition matrix:
+for (i in 1:R) {
+  current.place <- start.dollars + 1
+  j <- 1
+  num.moves <- 0
+  place <- c()
+  # keep running while you have greater than $0 and less than $10
+  while (current.place > 1 & current.place < 11) {
+    current.place <- sample(c(1:ncol(P)), 1, prob =  P[current.place,])
+    place[j] <- current.place
+    j = j + 1
+  }
+States <- c(States, place)
+   }
+Results <- as.data.frame(table(States))
+# create new column that records the time spent in each state:
+Results$Time_Spent <- Results$Freq/length(States)
+Results
+# check to see if fractions of time sum to 1:
+sum(Results$Time_Spent)
+```
+
