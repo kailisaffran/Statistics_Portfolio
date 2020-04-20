@@ -2,7 +2,7 @@
 Goal 1: Statistial Methods and Theory
   - Outcome 1.1: Design a study capable of testing a causal hypothesis and explain how study design is related to evidence for and conclusions about a hypothesis
     + Demonstrated by 'Project #1.Rmd'
-    + Tested the hypothesis of whether listening to dance music improves memory, using data from the Islanders
+    + Tested the hypothesis of whether listening to dance music improves memory, using data on a population from a hypothetical community, called the Islanders
     + Performed a randomized experimental pre-post test 
     + Used a t-test and permutation test to test hypothesis
     + These tests state how similar the means are between two groups which is suitable for this type of hypothesis
