@@ -15,3 +15,5 @@ Goal 1: Statistial Methods and Theory
     + Linear models of interaction between variables and how they affect one another
     + Interpretations for continuous and categorical variables are given in the code
   - Outcome 1.4: Use resampling methods for statistical inference, including parameter estimation and hypothesis testing
+    + Demonstrated by files 'Model Validation.Rmd,' 'Permutation test.Rmd,' and 'Resampling.Rmd'
+    + Shows knowledge of the resampling techniques cross validation, permutation resampling, and bootstrapping
