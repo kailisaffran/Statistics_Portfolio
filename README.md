@@ -2,7 +2,7 @@
 Goal 2: Data Science
   - Outcome 2.1: Develop fluency in one statistical programming language and gain familiarity with a second language
     + Demonstrated by file 'collatz.m'
-    + While most proficient in R, as evident by other attached files, this file shows familiarity with using matlab through developing simulations
+    + While most proficient in R, as evident by other attached files, this file shows familiarity with using MATLAB through development of simulations
   - Outcome 2.2: Translate a data analytic problem into a set of computational steps, and show how they work in real data
   - Outcome 2.3: Set up and run a Monte Carlo or simulation study to investigate a problem
     + Demonstrated by file 'Task 7.Rmd'
