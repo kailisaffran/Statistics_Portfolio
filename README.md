@@ -8,5 +8,5 @@ Goal 4: Statistical Practice and Problem Solving
     + Demonstrated by files 'Tennis Racquet Vibrations.Rmd' and 
   - Outcome 4.3: Demonstrate competence with using multiple models and methods for addressing a question in real data, and draw appropriate conclusions
     + Demonstrated by files 'Tennis Racquet Vibrations.Rmd' and
-    + Use of multiple string models to produce simulations of wave vibrations in a tennis racquet
+    + Use of multiple string models to produce simulations of wave vibrations in a tennis racquet to see how their vibrations differ
     + Refining a model to answer the question of whether a 106-year World Series drought for a MLB team is probable
