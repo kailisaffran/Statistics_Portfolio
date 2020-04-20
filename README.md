@@ -12,6 +12,6 @@ Goal 1: Statistial Methods and Theory
     + For bivariate analysis, similar distributions and descriptive statistics implies similarity between variables and, therefore, same effect on the response variable
   - Outcome 1.3: Demonstrate competency in fitting and interpreting statistical models for both continuous and categorical outcome variables
     + Demonstrated by 'Interaction.R'
-    + Linear models of interaction between variables
+    + Linear models of interaction between variables and how they effect one another
     + Interpretations for continuous and categorical variables are given in the code
   - Outcome 1.4: Use resampling methods for statistical inference, including parameter estimation and hypothesis testing
