@@ -1,0 +1,51 @@
+---
+title: "Task 6"
+author: "Kaili Saffran"
+date: "2/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(expm)
+```
+
+```{r}
+P <- matrix(c(0.5, 0.4, 0.1, 0.3, 0.4, 0.3, 0.2, 0.3, 0.5), nrow = 3, ncol = 3, byrow = T)
+
+eigen(P) # wrong!
+(ev <- eigen(t(P))) # negative numbers and don't add to one
+(ev$vectors[,1]/sum(ev$vectors[,1])) # now you get numbers that add to one
+(ev$vectors[,1]/sum(ev$vectors[,1])*62) # justification to answer in notes
+
+(ev$vectors[,3]/sum(ev$vectors[,3]))
+```
+- all 3 entries the same -> clue you did it wrong
+- need to find left-value of eigenvectors
+- want the multiple of that vector htat adds to one
+ - without constraint, there will be infinitely many solutions
+- will sort eigenvalues in descending order, 1 is the biggest absoulte value all the time
+
+
+```{r}
+P <- matrix(c(0.5,0.5,0,0,0,0,0.5,0.5,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0.2,0.8,0,0,0,0,0.4,0.6), nrow = 6, ncol = 6, byrow = T)
+ev <- eigen(t(P))
+ev # eigenvalue with multiplicity 3 because of multiple recurrent classes
+# no weights put on more than one recurrent class at a time
+
+# rescaling:
+# stationary vectors: there will be infinite
+(st1 <- (ev$vectors[,1]/sum(ev$vectors[,1])))
+(st2 <- (ev$vectors[,2]/sum(ev$vectors[,2])))
+(st3 <- (ev$vectors[,3]/sum(ev$vectors[,3])))
+(st4 <- 0.5*st1 + 0.5*st2)
+
+# limiting distributions: there will be several/infinite
+P2 <- matrix(c(0.5, 0.5, 0, 0, 0, 0), ncol = 6, byrow = F)
+P2 <- matrix(c(0, 0, 0, 0, 1/3, 2/3), ncol = 6, byrow = F)
+P2%*%(P%^%2)
+P2%*%(P%^%8)
+P2%*%(P%^%10)
+P2%*%(P%^%15)
+```
+
