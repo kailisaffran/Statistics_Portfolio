@@ -1,0 +1,95 @@
+---
+title: "Model Validation Problem Set"
+author: "Kaili Saffran"
+date: "9/25/2018"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ISLR)
+library(car)
+library(caret)
+```
+
+#Question 1
+```{r}
+scatterplot(mpg~horsepower, data=Auto)
+```
+As horsepower increases, mpg decreases according to the scatterplot. It is nonlinear. The OLS line shows an inverse relationship between the two variables by capturing the slope of the data. The smoothers show the best fit of the data by containing the majority of the points between the two dotted lines. The OLS model has more bias because there is less flexibility. The line does not fit to the model as well as the smoothers do.
+
+#Question 2
+The main challenge with not having next year's car data is you have to estimate mpg based on horsepower from the data you already have. By partitioning the training set, we can predict an estimated test RMSE for mpg based on horsepower for the following year.
+
+#Question 3
+```{r}
+new=createDataPartition(y=Auto$mpg,p=.7,list=FALSE)
+train=Auto[new,] 
+test=Auto[-new,]
+dim(train); dim(test)
+
+tc<-trainControl(method="cv",number=10) 
+fit1<-train(mpg~horsepower, data=Auto, method="lm",trControl=tc)
+fit1$results
+
+fit1.1<-train(mpg~poly(horsepower,2),data=Auto, method="lm",trControl=tc)
+fit1.1$results
+
+RMSEtest<-sqrt(mean((predict(fit1.1,newdata=test)-test$mpg)^2))
+RMSEtest
+```
+The estimated RMSE is 4.89 mpg and the actual RMSE is 5.11 mpg for the linear model. For the quadratic model, the estimated RMSE is 4.35 and the actual RMSE is 4.42. The quadratic model gives us a better estimate and actual RMSE because there is more flexibility.   
+
+#Question 4
+```{r}
+new2=createDataPartition(y=Auto$mpg,p=.7,list=FALSE)
+train2=Auto[new2,] 
+test2=Auto[-new2,]
+dim(train2); dim(test2)
+
+tc2<-trainControl(method="boot",number=20) 
+fit2<-train(mpg~horsepower, data=Auto, method="lm",trControl=tc2)
+fit2$results
+
+fit2.1<-train(mpg~poly(horsepower,2),data=Auto, method="lm",trControl=tc)
+fit2.1$results
+
+RMSEtest2<-sqrt(mean((predict(fit2.1,newdata=test2)-test2$mpg)^2))
+RMSEtest2
+```
+The estimated RMSE is 4.92 mpg and the actual RMSE is 4.89 mpg for the linear model. For the quadratic model, the estimated RMSE is 4.31 and the actual RMSE is 4.40. Bootstrapping resamples the data an n number of times without replacement, but this produces more bias. There is some difference between cross-validation and bootstrapping in accuracy of the RMSE predictions.  
+
+#Question 5
+```{r}
+newx=data.frame(horsepower=60)
+predict(fit2,newx)
+
+newx=data.frame(horsepower=150)
+predict(fit2,newx)
+
+newx=data.frame(horsepower=200)
+predict(fit2,newx)
+```
+
+#Question 6
+```{r}
+scatterplot(mpg~acceleration, data=Auto)
+
+new3=createDataPartition(y=Auto$mpg,p=.7,list=FALSE)
+train3=Auto[new3,] 
+test3=Auto[-new3,]
+dim(train3); dim(test3)
+
+tc3<-trainControl(method="boot",number=10) 
+fit3<-train(mpg~poly(horsepower+acceleration,2),data=Auto, method="lm",trControl=tc)
+fit3$results
+
+RMSEtest3<-sqrt(mean((predict(fit3,newdata=test3)-test3$mpg)^2))
+RMSEtest3
+```
+The test RMSE is 4.34 and the predicted RMSE is 4.18. I thought the quadratic model was a better model to use because the lower RMSE shows there is less mean squared error between the actual and predicted test. Adding another variable gives the data more information to predict a better model for the future.

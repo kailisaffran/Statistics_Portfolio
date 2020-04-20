@@ -1,0 +1,52 @@
+---
+title: "Resampling"
+author: "Kaili Saffran"
+date: "4/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#bootstrapping correlations and regression coefficients
+library(car)
+scatterplot(iris$Sepal.Length,iris$Petal.Length)
+cor(iris$Sepal.Length,iris$Petal.Length)
+cor.test(iris$Sepal.Length,iris$Petal.Length)
+```
+Assume bivariate normality, linearity, random sampling, and independence in a parametric procedure
+
+```{r}
+#bootstrapping a correlation coefficient
+library(boot)
+cor(iris$Sepal.Length,iris$Petal.Length)
+bootcor=function(iris,i)cor(iris$Sepal.Length[i],iris$Petal.Length[i],use="complete.obs")
+bootr=boot(iris,bootcor,2000)
+plot(bootr)
+print(bootr)
+boot.ci(bootr,conf=0.95,type=c("norm","perc"))
+```
+Plot shows the null distribution. Histogram is the probability distribution. Q-Q determines normality. In CI, we report normal interval because the data is a noraml distribution. Percentile is the nonparametric CI and the normal is the parametric. When they are very different CI's use percentile. Spearman's rho best with non-linear, monotomic data.
+
+```{r}
+scatterplot(rank(iris$Sepal.Length),rank(iris$Petal.Length)) #turns data into ordinals
+cor(iris$Sepal.Length,iris$Petal.Length, method="s") #spearman's rho
+```
+
+```{r}
+#bootstrapping regression coefficients
+mod=lm(Petal.Length~Sepal.Length, data=iris)
+plot(mod)
+bootreg <- function(formula, data, indices) {
+  d <- data[indices,] 
+  fit <- lm(formula, data=d)
+  return(coef(fit))
+}
+results <- boot(data=iris, statistic=bootreg, R=1000, formula=Petal.Length~Sepal.Length)
+print(results,index=2)
+plot(results,index=2)
+boot.ci(results, index=2, conf=.95,type=c("norm","perc")) 
+```
+

@@ -1,0 +1,78 @@
+---
+title: "permutation"
+author: "Kaili Saffran"
+date: "4/16/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#independent samples (resampling mean difference)
+EdeprSun=c(15,35,16,18,19,17,27,16,13,20) #ecstasy data
+deprSun=c(16,15,20,15,16,13,14,19,18,18)  #alcohol data
+
+comb=c(EdeprSun,deprSun)
+obsmeandiff=mean(EdeprSun)-mean(deprSun); obsmeandiff
+
+n=20
+n1=10;n2=10
+N=5000
+meandiff=numeric(N) 
+for (i in 1:N) {
+  data <- sample(comb, n, replace=FALSE)
+  grp1 <- data[1:n1]
+  grp2 <- na.omit(data[n1+1: n])
+  meandiff[i] <- mean(grp1) - mean(grp2)
+}
+
+hist(meandiff)
+test=abs(meandiff) 
+print((length(test[test >= obsmeandiff]))/N)
+boxplot(EdeprSun, deprSun)
+var(EdeprSun)
+var(deprSun)
+```
+
+```{r}
+#dependent samples (resample mean difference)
+deprSun=c(16,15,20,15,16,13,14,19,18,18)  #alcohol data
+deprWed=c(5,6,30,8,9,7,18,17,3,10)  #alcohol
+deprdiff=deprWed-deprSun
+deprdiff
+obsdiff=mean(deprdiff) #use sign for p-value below
+N=5000
+Diff=numeric(N)
+for (i in 1:N) {
+  signs=sample(c(1,-1),length(deprdiff),replace=T)
+  samp=deprdiff * signs
+  Diff[i]=mean(samp)
+}
+hist(Diff)
+```
+
+```{r}
+#for finding 1-tailed probabilities for observed mean difference
+posp=length(Diff[Diff >= abs(obsdiff)])/N
+negp=length(Diff[Diff <= obsdiff])/N
+p2tailed=posp + negp
+```
+
+```{r}
+#independent samples (resampling variance ratio)
+obsvarratio=var(EdeprSun)/var(deprSun);obsvarratio #create ratio >1
+varratio=numeric(N) 
+for (i in 1:N) {
+  data <- sample(comb, n, replace=FALSE)
+  grp1 <- data[1:n1]
+  grp2 <- na.omit(data[n1+1: n])
+  varratio[i] <- var(grp1)/var(grp2)
+}
+hist(varratio)
+#for finding 1-tailed probabilities for observed mean difference
+posp=length(varratio[varratio >= obsvarratio])/N 
+```
+
+
