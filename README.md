@@ -6,10 +6,9 @@ Goal 1: Statistial Methods and Theory
     + Performed a randomized experimental pre-post test 
     + Used a t-test and permutation test to test hypothesis
     + These tests state how similar the means are between two groups which is suitable for providing conclusions on a casual hypothesis
-    + It was found that listening to dance music does not result in a significant change in memory
   - Outcome 1.2: Use graphical methods to summarize univariate and bivariate distributions and develop insights through graphical data summaries
     + Demonstrated by 'part 4 data project.Rmd'
-    + Gained insight on standard deviation, skewness, and other descriptive statistics of the variables
+    + Gained insight on standard deviation, skewness, and other descriptive statistics of the response and explanatory variables
     + For bivariate analysis, similar distributions and descriptive statistics implies similarity between variables and, therefore, same effect on the response variable
   - Outcome 1.3: Demonstrate competency in fitting and interpreting statistical models for both continuous and categorical outcome variables
     + Demonstrated by 'Interaction.R'
