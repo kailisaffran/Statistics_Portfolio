@@ -8,6 +8,6 @@ Goal 3: Mathematical Foundations
     + Demonstrated by file 'Task 6.Rmd'
     + Shows the ability to find long run behavior using matrix multiplication and eigenvalue/eigenvector decomposition
   - Outcome 3.3: Demonstrate knowledge of probability (emphasis on conditional probability and independence, random variables, functions and sums of random variables, moment-generating functions, Markov chains and other probability models, Monte Carlo methods, and applications of conditional probability)
-  + Demonstrated by files 'Task 7.Rmd,' 'Task 9.Rmd,' and 'HW 3 Simulations.Rmd'
-  + Shows the ability to use Markov Chains, simulate random numbers, and create simulations to find probabilities
-  + Additional knowledge in conditional probability, independence, and random variables was obtained in the courses Math Stats and Probability Models
+    + Demonstrated by files 'Task 7.Rmd,' 'Task 9.Rmd,' and 'HW 3 Simulations.Rmd'
+    + Shows the ability to use Markov Chains, simulate random numbers, and create simulations to find probabilities
+    + Additional knowledge in conditional probability, independence, and random variables was obtained in the courses Math Stats and Probability Models
