@@ -1,0 +1,352 @@
+---
+title: "Homework 3; Simulations 1"
+author: "Kaili Saffran"
+date: "February 13, 2020"
+output:
+  word_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Answer each of the following questions using simulations.
+
+1. In 100 coin tosses, what is the probability of having the same side come up 10 times in a row?
+```{r Q1}
+set.seed(1025)
+
+Coin_Tosses <- function(tosses, R, nrow) {
+# place to store results:
+Result <- data.frame("Sample" = c(rep(0, R)))
+# replications of simulation:
+for (i in 1:R) {
+Coin <- c("H", "T")
+# set intital conditions:
+Heads <- 0
+Tails <- 0
+
+# simulation:
+for (j in 1:tosses) {
+  Toss <- sample(Coin, 1)
+  if (Toss == "H") {
+    Heads = Heads + 1
+    Tails = 0
+  } else {
+    Tails = Tails + 1
+    Heads = 0
+  }
+}
+# condition for getting 10 or more in a row:
+if (Heads >= nrow || Tails >= nrow) {
+  Result$Sample[i] <- TRUE
+} else {
+  Result$Sample[i] <- FALSE
+  }
+}
+P <- sum(Result$Sample[Result$Sample == TRUE]) / R
+print(paste("The probability of having the same side come up", nrow, "times in a row is", P))
+}
+
+Coin_Tosses(100, 10000, 10)
+```
+
+2. Six kids are standing in line. What is the probability that they are in alphabetical order by name? Assume no two children have the same exact name.
+```{r Q2}
+set.seed(1025)
+
+Alphabetical_Order <- function(nkids, R) {
+  # place to store results:
+  Order <- data.frame("Result" = rep(FALSE, R))
+  Kids <- c(1:nkids)
+  for (i in 1:R) {
+    # put kids in one specific order:
+    Line <- sample(Kids, nkids, replace = FALSE)
+    # want result to be true; identical ensures the correct one order:
+    Order$Result[i] <- identical(Kids, Line)
+  }
+  P <- sum(Order$Result[Order$Result == TRUE]) / R
+  print(paste("The probabilty of having", nkids, "kids in alphabetical order is", P))
+}
+
+Alphabetical_Order(6, 10000)
+```
+
+3. Remember the kids from the last question? There are three boys and three girls. How likely is it that all the girls come first?
+```{r Q3}
+set.seed(1025)
+
+Gender_Order <- function(ngirls, nboys, R) {
+nkids <- nboys + ngirls
+# place to store results:
+Order <- data.frame("Result" = rep(FALSE, R))
+# put kids in order of girls first, boys second:
+Kids <- c(rep(0, ngirls), rep(1, nboys))
+for (i in 1:R) {
+Line <- sample(Kids, nkids, replace = FALSE)
+# ensure correct order using identical command:
+Order$Result[i] <- identical(Kids, Line)
+}
+P <- sum(Order$Result[Order$Result == TRUE]) / R
+print(paste("The probabilty of having all the girls come first is", P))
+}
+
+Gender_Order(3, 3, 10000)
+```
+
+4. In six coin tosses, what is the probability of having a different side come up with each throw, that is, that you never get two tails or two heads in a row?
+```{r Q4}
+set.seed(1025)
+
+Alternating_Coin <- function(ntosses, R) {
+# place to store results:
+Result <- data.frame("Sample" = c(rep("No", R)))
+Coin <- c("H", "T")
+# first coin is heads -> alternate:
+# in this case, with 6 tosses, there would be 3 heads, 3 tails:
+Heads_Sample <- c(rep(c("H","T"), ntosses/2))
+# first coin is tails -> alternate
+Tails_Sample <- c(rep(c("T","H"), ntosses/2))
+
+for (i in 1:R) {
+# sample coin toss:
+Coin_Sample <- sample(Coin, ntosses, replace = TRUE)
+if (Coin_Sample[1] == "H") {
+  # use identical command to see if the pattern with first coin being head matches coin sample:
+  check <- identical(Heads_Sample, Coin_Sample)
+  if(check == TRUE){
+    Result$Sample[1] <- "Yes"
+     }
+  } else {
+    # repeat for having the first coin toss come up tails:
+  check <- identical(Tails_Sample, Coin_Sample)
+  if(check == TRUE){
+    Result$Sample[i] <- "Yes"
+  }
+}
+}
+P <- length(Result$Sample[Result$Sample == "Yes"]) / R
+# can't use sum or it generates the NAs
+print(paste("The probability of the coin alternating sides for", ntosses, "tosses is", P))
+}
+
+Alternating_Coin(6, 10000)
+```
+
+5. A random five-card poker hand is dealt from a standard deck. What is the chance of a flush (all cards are the same suit)?
+```{r Q5}
+set.seed(1025)
+
+Poker_Flush <- function(R) {
+  # create suits:
+  Suit <- c(rep("Heart", 13), rep("Club", 13), rep("Spade", 13), rep("Diamond", 13))
+  # create possible flushes for each suit:
+  Heart_Flush <- c(rep("Heart", 5))
+  Club_Flush <- c(rep("Club", 5))
+  Spade_Flush <- c(rep("Spade", 5))
+  Diamond_Flush <- c(rep("Diamond", 5))
+  # place to store results:
+  Result <- data.frame("Flush" = rep("No", R))
+  for (i in 1:R) {
+    check <- FALSE
+    Hand <- sample(Suit, 5, replace = FALSE)
+    # for each suit, use identical command to see if you get 5 of same suit:
+    if (Hand[1] == "Heart") {
+      check <- identical(Hand, Heart_Flush)
+    } else {
+      if (Hand[1] == "Club") {
+        check <- identical(Hand, Club_Flush)
+      } else {
+        if (Hand[1] == "Spade") {
+          check <- identical(Hand, Spade_Flush)
+        } else {
+          if (Hand[1] == "Diamond") {
+            check <- identical(Hand, Diamond_Flush)
+          }
+        }
+      }
+    }
+    if (check == TRUE) {
+      Result$Flush[i] <- "Yes"
+    }
+  }
+  P <- length(Result$Flush[Result$Flush == "Yes"]) / R
+  print(paste("The probability of drawing a flush is", P))
+}
+
+Poker_Flush(10000)
+```
+
+6. In a random thirteen-card hand from a standard deck, what is the probability that none of the cards is an ace and none is a heart (???)?
+```{r Q6}
+set.seed(1025)
+
+Cards <- function(R) {
+# 52 cards in a deck
+Deck <- c(1:52)
+# place to store results:
+Result <- data.frame("Draws" = rep(1, R))
+for (i in 1:R) {
+  # sample 13 cards in a deck:
+  Hand <- sample(Deck, 13)
+  for (j in 1:length(Hand)) {
+    # 13 ranks in a suit
+    # Let card 1 be an ace of clubs
+    # Let card 14 be an ace of spades
+    # Let card 27 be an ace of diamonds
+    # Let card 40 be an ace of hearts
+    # card 40 and above is a heart
+    # do not want any of these drawn
+    if(Hand[j] == 1 | Hand[j] == 14 | Hand[j] == 27 | Hand[j] >= 40){
+      Result$Draws[i] <- FALSE
+    }
+    }
+  }
+P <- length(Result$Draw[Result$Draw == TRUE]) / R
+print(paste("The probability of drawing 13 cards and none of them being an ace or heart is", P))
+}
+
+Cards(10000)
+```
+
+7. At four parties each attended by 13, 23, 33, and 53 people respectively, how likely is it that at least two individuals share a birthday at each party? Assume there are no leap days, that all years are 365 days, and that births are uniformly distributed over the year.
+```{r Q7}
+set.seed(1025)
+
+Same_Birthday <- function(npeople, R) {
+  # place to store results:
+  Result <- data.frame("Matches" = rep(FALSE, R))
+  for (i in 1:R) {
+    # create a uniformed distribution of peoples birthdays:
+    Birthdays <- trunc(runif(npeople, 1, 365))
+    # analyze birthdays in a table:
+    Check <- table(Birthdays)
+    # do any of the columns of the table to have more than one observation?:
+    if (length(Check[Check > 1])) {
+      Result$Matches[i] <- TRUE
+    }
+  }
+  P <- length(Result$Matches[Result$Matches == TRUE]) / R
+  print(paste("The probability of at least two individuals having the same birthday at a party where", npeople, "people are present is", P))
+}
+
+Same_Birthday(13, 10000)
+Same_Birthday(23, 10000)
+Same_Birthday(33, 10000)
+Same_Birthday(53, 10000)
+
+## Check for 13 people:
+# 353:364 -> a
+# 1 - (prod(a) / (365 ^ 12)) = 0.1944
+```
+
+8. A famous coin tossing game has the following rules: The player tosses a coin repeatedly until a tail appears or tosses it a maximum of 1000 times if no tail appears. The initial stake starts at 2 dollars and is doubled every time heads appears. The first time tails appears, the game ends and the player wins whatever is in the pot. Thus the player wins 2 dollars if tails appears on the first toss, 4 dollars if heads appears on the first toss and tails on the second, 8 dollars if heads appears on the first two tosses and tails on the third, and so on. Mathematically, the player wins 2k dollars, where k equals the number of tosses until the first tail. What is the probability of profit if it costs 15 dollars to participate?
+```{r Q8}
+set.seed(1025)
+
+Coin_Game <- function(R) {
+# place to store results:
+Result <- data.frame("Outcome" = rep(0, R))
+for (i in 1:R) {
+# set initial conditions:
+Toss <- 0
+Counter_Toss <- 1
+Earnings <- 0
+Coin <- c("H", "T")
+# play until you hit 1000 tosses or get a tail:
+while (Toss <= 1000 | Toss == "H") {
+  Toss <- sample(Coin, 1)
+  if (Toss == "H") {
+   # earnings doubled every time heads appears:
+   Earnings <- Earnings + 2^Counter_Toss
+   Counter_Toss = Counter_Toss + 1
+  }
+}
+Result$Outcome[i] <- Earnings
+}
+# look at results where the result is greater than 15 to earn a profit:
+P <- length(Result$Outcome[Result$Outcome > 15]) / R
+print(paste("The probability of making a profit if it costs $15 to participate is", P))
+}
+
+Coin_Game(10000)
+```
+
+9. Back to coin tossing. What is the probability the pattern heads-heads-tails appears before tails-heads-heads?
+```{r}
+set.seed(1025)
+
+Coin_Pattern <- function(R) {
+# place to store results:
+Result <- data.frame("Toss" = rep(0, R))
+# HHT pattern:
+HHT <- c("H", "H", "T")
+# THH pattern:
+THH <- c("T", "H", "H")
+Coin <- c("H", "T")
+for (i in 1:R) {
+  # initial condition for coin toss:
+  j = 1
+  Coin_Sample <- c(rep(0, 100))
+  # set initial conditions:
+  Pattern_HHT = FALSE
+  Pattern_THH = FALSE
+  # keep going until you get one of the patterns:
+  Run = TRUE
+  while (Run == TRUE) {
+    Coin_Sample[j] <- sample(Coin, 1)
+    Pattern <- c(Coin_Sample[j - 2], Coin_Sample[j - 1], Coin_Sample[j])
+    # want sample to match patterns:
+    Pattern_HHT <- identical(Pattern, HHT)
+    Pattern_THH <- identical(Pattern, THH)
+    if (Pattern_HHT == TRUE) {
+      Result$Toss[i] <- "Yes"
+      Run = FALSE
+    }
+    if (Pattern_THH == TRUE) {
+      Result$Toss[i] <- "No"
+      Run = FALSE
+    }
+    # toss coin again if run is still true:
+    j = j + 1
+  }
+}
+P <- length(Result$Toss[Result$Toss == "Yes"]) / R
+print(paste("The probability of HHT appearing before THH is", P))
+}
+
+Coin_Pattern(100)
+```
+
+10. Suppose you're on a game show, and you're given the choice of three doors. Behind one door is a car; behind the others, goats. You pick a door, say #1, and the host, who knows what's behind the doors, opens another door, say #3, which has a goat. He then says to you, "Do you want to pick door #2?" What is the probability of winning the car if you use the strategy of first picking a random door and then switching doors every time? Note that the host will always open a door you did not pick, and it always reveals a goat.
+```{r Q10}
+set.seed(1025)
+
+Game_Show <- function(R) {
+  # possible prizes
+  Doors <- c("Car", "Goat 1", "Goat 2")
+  # place to store results:
+  Result <- data.frame("Final_Answer" = rep(0, R))
+  for (i in 1:R) {
+    # sample doors:
+    Choice <- sample(Doors, 1)
+    # what are the remaining doors?:
+    Remaining_Doors <- Doors[Doors != Choice]
+    if (Choice == "Goat 1" | Choice == "Goat 2") {
+      # host reveals door with goat:
+      Host_Door_Reveal <- Remaining_Doors[Remaining_Doors != "Car"]
+      Final_Choice <- Remaining_Doors[Remaining_Doors != Host_Door_Reveal]
+    } else {
+      Host_Door_Reveal <- sample(Doors, 1)
+      Final_Choice <- Remaining_Doors[Remaining_Doors != Host_Door_Reveal]
+    }
+    Result$Final_Answer[i] <- Final_Choice
+  }
+  P <- length(Result$Final_Answer[Result$Final_Answer == "Car"]) / R
+  print(paste("The probability of winning a car if you switch doors every time is", P))
+}
+
+Game_Show(10000)
+```
+
