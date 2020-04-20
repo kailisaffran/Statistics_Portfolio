@@ -1,0 +1,54 @@
+---
+title: "Task 9"
+author: "Kaili Saffran"
+date: "2/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+```{r}
+set.seed(1025)
+rexp(20, 0.25)
+```
+
+# Question 2
+```{r}
+x <- 1:100
+y <- 0.25*exp(-0.25*x)
+plot(x, y, type = "l", col = "purple")
+```
+
+# Question 3
+```{r}
+lambda <- 0.25
+y <- runif(1000, 0, 1)
+x <- -(1/lambda)*log(1-y)
+plot(x, y)
+```
+
+# Question 4
+```{r}
+# pdf
+x <- 1:1000
+y <- 4*(1 - x)^3
+plot(x, y)
+```
+
+```{r}
+# cdf
+y <- runif(1000, 0, 1)
+x <- 1 - (1 - y)^(1/4)
+plot(x, y)
+
+# check for number 5: 
+# by hand...
+  # expected value = 0.2
+  # variance = 0.0267
+mean(x)
+var(x)
+```
+
