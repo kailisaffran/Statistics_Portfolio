@@ -5,7 +5,8 @@ Goal 1: Statistial Methods and Theory
     + Tested the hypothesis of whether listening to dance music improves memory, using data on a population from a hypothetical community, called the Islanders
     + Performed a randomized experimental pre-post test 
     + Used a t-test and permutation test to test hypothesis
-    + These tests state how similar the means are between two groups which is suitable for this type of hypothesis
+    + These tests state how similar the means are between two groups which is suitable for providing conclusions on a casual hypothesis
+    + It was found that listening to dance music does not result in a significant change in memory
   - Outcome 1.2: Use graphical methods to summarize univariate and bivariate distributions and develop insights through graphical data summaries
     + Demonstrated by 'part 4 data project.Rmd'
     + Gained insight on standard deviation, skewness, and other descriptive statistics of the variables
