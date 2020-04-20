@@ -1,0 +1,221 @@
+---
+title: "Final Analytic Project"
+author: "Kaili Saffran"
+date: "12/2/2019"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+  My research question is "Do behavioral factors have a significant effect on a county's overall percentage of cancer deaths?" My hypothesis is that variables such as obesity, poor diet, and minimal physical activity will have a significant effect on the percentage of deaths due to cancer in a county's population. My reasoning for this hypothesis is based on prior literature and knowledge that these variables are among some of the leading causes of cancer and have a negative impact on human health. I would like to see if their impact is significant enough in increasing the total percentage of deaths due to cancer utilizing OLS regression.
+
+  The data I am using is from healthdata.gov. It is titled "Community Health Status Report" and is provided by the Centers for Disease Control and Prevention. Data was collected per county using a combination of surveys and statistics provided by a variety of sources. It consists of over 200 measures for each of the 3,141 U.S. counties. However, after some cleaning of the dataset, I will only be working with 3,141 observations of 9 variables. I will be focused on the percentage of deaths due to cancer among white individuals aged 45-64. I chose the white race since they make up the greatest portion of the population and therefore would have the least amount of no records. I chose 45-64 as the age range because it is an old enough age where there is probably a significant number of deaths, but not an old enough age where individuals are most likely dying from old age or other factors.
+  
+##Data Manipulation
+```{r}
+library(dplyr)
+df <- read.csv("/Users/kailisaffran/Documents/Fall 2019/Regression Analysis/chsi_dataset (1)/DEMOGRAPHICS.csv") 
+df2 <- read.csv("/Users/kailisaffran/Documents/Fall 2019/Regression Analysis/chsi_dataset (1)/LEADINGCAUSESOFDEATH.csv") 
+df3 <- read.csv("/Users/kailisaffran/Documents/Fall 2019/Regression Analysis/chsi_dataset (1)/RISKFACTORSANDACCESSTOCARE.csv") 
+df4 <- read.csv("/Users/kailisaffran/Documents/Fall 2019/Regression Analysis/chsi_dataset (1)/VUNERABLEPOPSANDENVHEALTH.csv")
+
+
+df <- df%>%
+  select(County_FIPS_Code, CHSI_County_Name, CHSI_State_Name, Poverty)
+df2 <- df2%>%
+  select(County_FIPS_Code, CHSI_County_Name, CHSI_State_Name, E_Wh_Cancer, E_Bl_Cancer)
+df3 <- df3%>%
+  select(County_FIPS_Code, CHSI_County_Name, CHSI_State_Name, Obesity, No_Exercise, Few_Fruit_Veg)
+df4 <- df4%>%
+  select(County_FIPS_Code, CHSI_County_Name, CHSI_State_Name, Particulate_Matter_Ind, Toxic_Chem)
+
+
+df.new <- left_join(df, df2, by=c("County_FIPS_Code", "CHSI_County_Name", "CHSI_State_Name"))
+df.new1 <- left_join(df.new, df3, by=c("County_FIPS_Code", "CHSI_County_Name", "CHSI_State_Name"))
+df.new2 <- left_join(df.new1, df4, by=c("County_FIPS_Code", "CHSI_County_Name", "CHSI_State_Name"))
+
+df.new2 <- df.new2[,-c(1,3)]
+```
+
+```{r}
+df.new2$Obesity[df.new2$Obesity<0] <- NA
+df.new2$No_Exercise[df.new2$No_Exercise<0] <- NA
+df.new2$Few_Fruit_Veg[df.new2$Few_Fruit_Veg<0] <- NA
+df.new2$Poverty[df.new2$Poverty<0] <- NA
+df.new2$E_Wh_Cancer[df.new2$E_Wh_Cancer<0] <- NA
+df.new2$E_Bl_Cancer[df.new2$E_Bl_Cancer<0] <- NA
+
+df.new2$Particulate_Matter_Ind[df.new2$Particulate_Matter_Ind==2] <- 0
+df.new2$Particulate_Matter_Ind <- as.factor(df.new2$Particulate_Matter_Ind)
+```
+
+##Descriptive Statistics
+```{r}
+summary(df.new2$E_Wh_Cancer); boxplot(df.new2$E_Wh_Cancer, main="Percentage of Death due to Cancer among Whites")
+summary(df.new2$Obesity); boxplot(df.new2$Obesity, main="Percentage of Obesity")
+summary(df.new2$No_Exercise); boxplot(df.new2$No_Exercise, main="Percentage Of No Exercise")
+summary(df.new2$Few_Fruit_Veg); boxplot(df.new2$Few_Fruit_Veg, main="Percentage Of Low Fruit/Vegetable Consumption")
+summary(df.new2$Poverty); boxplot(df.new2$Poverty, main="Percentage of Poverty")
+summary(df.new2$E_Bl_Cancer); boxplot(df.new2$E_Bl_Cancer, main="Percentage of Death due to Cancer among Blacks")
+summary(df.new2$Particulate_Matter_Ind)
+```
+
+  My dependent variable in this study is E_Wh_Cancer, which is the percentage of deaths due to cancer among whites age 45-64. It has a range from 14% to 66% with a mean of 34.99%. It appears pretty normally distributed. 
+
+  My three "key" independent variables are Obesity, No_Exercise, and Few_Fruit_Veg. These variables support my hypothesis that behavioral factors can increase risk of getting cancer and death due to cancer. The variable Obesity is the percentage of adults currently at risk for health problems related to being overweight based on BMI. An adult is labeled obese if they have a BMI of 30 or greater. This variable appears to have a normal distribution with a range from 4.2% to 42.6% and a mean of 24.15%. The variable No_Exercise is the percentage of adults that reported no participation in leisure-time physical activities/exercise in the past month. This variable appears slightly skewed right with a range from 8.3% to 52.4% and a mean of 26.51%. Finally, the variable Few_Fruit_Veg represents the percentage of adults that reported an average fruit/vegetable consumption of less than five servings a day. This distribution is normal with a range from 63.1% to 96.4% and a mean of 78.92%.
+  
+  Additional independent variables I included in my study are Poverty, E_Bl_Cancer, and Particulate_Matter_Ind. Respectively, these measure poverty levels, percentage of deaths due to cancer among blacks age 45-64, and whether a county meets air quality standards for particualte matter. I chose to include Poverty and Particulate_Matter_Ind because I believe they could have a significant effect on the percentage of deaths due to cancer. Additionally, I included E_Bl_Cancer because it would be interesting to compare the percentage of deaths due to cancer between two different races to see if race is an influential factor.
+  
+In this study I will utilize four different types of variables:
+Continuous: E_Wh_Cancer; E_Bl_Cancer; Obesity
+Factor: Particulate_Matter_Ind (1 = exceeds air quality standards; 0 = does not exceed)
+Transformed: Poverty (I will perform a log transformation on this variable since it had the most highly skewed distribution)
+Interaction: No_Exercise*Few_Fruit_Veg (I will interact these two variables since they both have to do with poor care to the human body and interacting these two variables could potentially have a stronger impact on the dependent variable)
+  
+##Regression Model
+```{r}
+df.new2$Poverty.log <- log(df.new2$Poverty)
+model <- lm(E_Wh_Cancer~Obesity+E_Bl_Cancer+Particulate_Matter_Ind+Poverty.log+No_Exercise*Few_Fruit_Veg, data=df.new2)
+summary(model)
+```
+  
+Interpretation: All coefficients are statistically significant with p-values less than 0.05.
+  
+  For every one percentage-point increase in the percentage of adults at risk for obesity, the percentage of deaths due to cancer among whites decreases by 0.07 percentage points, all else constant and controlling for Particulate_Matter_Ind.
+
+  For every one percentage-point increase in the percentage of deaths due to cancer among blacks, the percentage of deaths due to cancer among whites increases by 0.10 percentage points, all else constant and controlling for Particulate_Matter_Ind.
+  
+  As Particulate_Matter_Ind changes from not exceeding air quality standards to exceeding, the percentage of deaths due to cancer among whites increases by 2.89 percentage points, all else constant.
+  
+  For every one percentage-point increase in the percentage of individuals living below the poverty line, the percentage of deaths due to cancer among whites decreases by 0.05 percentage points, all else constant and controlling for Particulate_Matter_Ind.
+  
+  For every one percentage-point increase in the percentage of adults that reported no participation in lesiure-time physical activities/exercise in the past month, the percentage of deaths due to cancer among whites decreases by 0.82 percentage points, all else constant and controlling for Particulate_Matter_Ind.
+  
+  For every one percentage-point increase in the percentage of adults that report an average fruit/vegetable consumption of less than 5 servings a day, the percentage of deaths due to cancer among whites decreases by 0.32 percentage points, all else constant and controlling for Particulate_Matter_Ind.
+  
+  As adults spend less time exercising, the relationship between percentage of deaths due to cancer among whites and Few_Fruits_Veg gets stronger by 0.01 percentage points.
+  
+```{r}
+yhatobs <- predict(model, data.frame(Obesity=c(21.1,27.2), E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=0.7885, No_Exercise=8.3, Few_Fruit_Veg=63.1)); yhatobs[2]-yhatobs[1]
+
+yhatblack <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=c(25,31.5), Particulate_Matter_Ind="0", Poverty.log=0.7885, No_Exercise=8.3, Few_Fruit_Veg=63.1)); yhatblack[2]-yhatblack[1]
+
+yhatpart <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind=c("0", "1"), Poverty.log=0.7885, No_Exercise=8.3, Few_Fruit_Veg=63.1)); yhatpart[2]-yhatpart[1]
+
+yhatpov <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=c(2.2824,2.785), No_Exercise=8.3, Few_Fruit_Veg=63.1)); yhatpov[2]-yhatpov[1]
+
+yhatex <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=0.7885, No_Exercise=c(21.9,30.8), Few_Fruit_Veg=63.1)); yhatex[2]-yhatex[1]
+
+yhatveg <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=0.7885, No_Exercise=8.3, Few_Fruit_Veg=c(75.5,82.4))); yhatveg[2]-yhatveg[1]
+```
+  
+  All the variables except for Particulate_Matter_Ind share the same units. Therefore, to determine the strongest/weakest predictors of y, we have to compare their predicted values. Particulate_Matter_Ind is the stongest predictor because its difference in predicted y's is the greatest at a value of 2.89. Poverty.log is a very strong predictor as well with a difference of 2.69. The weakest predictor is Obesity with a difference of 0.43, with E_Bl_Cancer being a weak predictor as well with a difference of 0.65.
+
+##Predicted Y Values
+```{r}
+(yhat1 <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=0.7885, No_Exercise=8.3, Few_Fruit_Veg=63.1), interval = 'confidence'))
+(yhat2 <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind="1", Poverty.log=0.7885, No_Exercise=8.3, Few_Fruit_Veg=63.1), interval = 'confidence'))
+```
+  This set of predicted y values and corresponding confidence intervals show that when the county exceeds air quality standards for particulate matter, the percentage of deaths due to cancer among whites increases. Therefore, air quality does have an impact on the percentage of cancer deaths. All variables other than Particulate_Matter_Ind were set at their minimums.
+
+```{r}
+(yhat3 <- predict(model, data.frame(Obesity=c(4.2,42.6), E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=0.7885, No_Exercise=c(8.3,52.4), Few_Fruit_Veg=c(63.1,96.4)), interval = 'confidence'))
+```
+  This second set of predicted y values and corresponding confidence intervals show that behavioral factors do not have a negative effect on the percentage of deaths due to cancer among whites. They show that as behavior worsens, the percentage of deaths due to cancer among whites actually decrease. Ultimately, this disproves my hypothesis.
+  
+```{r}
+(yhat4 <- predict(model, data.frame(Obesity=4.2, E_Bl_Cancer=10, Particulate_Matter_Ind="0", Poverty.log=c(0.7885,3.5891), No_Exercise=8.3, Few_Fruit_Veg=63.1), interval = 'confidence'))
+```
+ This third set of predicted y values and corresponding confidence intervals show that poverty levels have a significant impact on the percentage of deaths due to cancer among whites. These predicted values show that in counties where the poverty level is very high, the percentage of deaths due to cancer among whites is much lower. 
+
+##Diagnostics
+
+###Linearity
+```{r}
+library(car)
+model1 <- lm(E_Wh_Cancer~Obesity+E_Bl_Cancer+Particulate_Matter_Ind+Poverty.log+No_Exercise+Few_Fruit_Veg, data=df.new2)
+crPlots(model1)
+```
+  
+  Looking at CPR plots of the model, linearity appears to be pretty good since the loess and regression lines follow similar paths. 
+
+###Heteroscedasticity
+```{r}
+residualPlots(model, type="rstudent")
+ncvTest(model)
+```
+  
+  Looking at residual plots of the model, we want the error variance to be constant which is supported through horizontal straight lines. The variables Poverty.log, No_Exercise, and E_Bl_Cancer are the only ones that could be problematic in regards to heteroscedasticity since there are slight curves at the beginning and end of the plots for these variables. Using a non-constant variance score test, a p-value of 0.07 fails to reject the null hypothesis that there is constant error variance. Therefore, homoscedasticity holds.
+
+###Normality
+```{r}
+hist(model$residuals)
+qqPlot(model)
+shapiro.test(model$residuals)
+```
+  
+  Looking at a histogram of the model's residuals and at a qq-plot, the model appears to be pretty normally distributed. Although, there could be some issues on the ends of the distributions due to outliers. Using a shapiro-wilk test for normality, we derive a p-value of less than 0.05 which rejects the null hypothesis that the model is normally distributed. Therefore, this model is problematic in regards to normality. 
+
+###Autocorrelation
+```{r}
+durbinWatsonTest(model)
+```
+  
+  The Durbin-Watson test produces a p-value of 0.03. The null hypothesis for this test assumes that the residuals are not auto-correlated. A p-value of 0.03 rejects the null and therefore it can be concluded that autocorrelation exists within the model.
+
+###Multicollinearity
+```{r}
+sqrt(vif(model))
+```
+  
+  There are problems with multicollinearity for the variables No_Exercise and the interaction because their VIFs are greater than 10. The VIF for No_Exercise says that the confidence intervals are 15.31 times greater when No_Exercise is included in the model. Additionally, the VIF for the interaction says that the confidence intervals are 17.70 times greater when the interaction is included in the model.
+
+  These diagnostics show that without fixing, there could be consequences to the model. Non-linearity is most likely the result of skewed distributions. Non-normality should not have a huge impact on the model since we have a fairly large sample size. Consequences of multicollinearity include unstable coefficients and very large standard errors. It does not appear neccessary to address non-linearity since the CPR plots look pretty good. Furthermore, I would have to model the non-linearity since some of the variables are non-monotonic, as shown in the plots. To deal with multicollinearity, I could remove single independent variables from the model or standardize variables. Finally, as a last resort, I could perform a boxcox transformation on E_Wh_Cancer for non-normality if the previous methods do not correct the model. 
+
+##Model Fit
+```{r}
+summary(model)
+library(rsq)
+rsq.partial(model)
+anova(model)
+```
+  
+  The model fit is subpar. The RMSE is okay at 2.89 on 786 degrees of freedom, but the R-squared value is 0.42 which is not very good, especially with several independent variables. Looking at partial r-squares above, Obesity appears to be the worst predictor in this model. However, it has the highest F-statistic. Looking further at the ANOVA of the model, Particulate_Matter_Ind, No_Exercise, Few_Fruit_Veg, and its interaction produce the smallest partial F-statistics. Therefore, these could have an impact on the fit of the model as well.
+
+```{r}
+model2 <- lm(E_Wh_Cancer~Obesity+E_Bl_Cancer+Poverty.log, data=df.new2)
+model3 <- lm(E_Wh_Cancer~E_Bl_Cancer+Particulate_Matter_Ind+Poverty.log+No_Exercise*Few_Fruit_Veg, data=df.new2)
+
+summary(model); summary(model2); summary(model3)
+BIC(model); BIC(model2); BIC(model3)
+```
+  
+  After creating two new models, the original model still appears to have the best model fit. It has the highest adjusted r-squared and smallest RMSE and its BIC statistic is the smallest at 3,992.06. Therefore, it may be that only adding different variables can improve the model fit, implying that there may be better predictors in the percentage of deaths due to cancer among whites.
+
+##Limitations
+
+  There are concerns from measurement error and omitted variables within this study. Measurement error is very likely within this study. First, many counties had missing values for the percentage of deaths due to cancer among whites due to no report. The consequences of this are less efficient estimates and a decrease in R-squared. Further, lots of the independent variables were recorded from survey data and this leaves the issue of some counties where adults may have not responded or were guilty of response bias. The consequence of this is coefficient estimates can become biased based on correlation with other independent variables. Additionally, surveys can make results unreliable. Omitting variables in this study could have easily affected my results as well through bias. Not using all independent variables could have weakened my results because it is probably most likely that all the independent factors play a part in the percentage of deaths due to cancer. I only focused on a few behavioral factors that could impact cancer deaths. Further, I only used one age range and race which plays a significant role in what my results were since my predictors were a reflection of all ages and races. However, omitting several race and age range variables was due to how the data was recorded.
+  
+  There are limitations in how the data was recorded that weakened my results. The data was broken up into cancer variables by race and age range. When I trying to sum all age ranges together for the white population and their percentage of deaths due to cancer, I got a variable consisting of percentages over 100, which is statistically incorrect. This resulted due to the cancer variable being a measurement of what proportion that populations deaths were due to cancer. Therefore, I only focused on one age range (45-64). Additionally, the demographic populations for age ranges were not the same age range groupings as the cancer variable in the LEADINGCAUSESOFDEATH dataset. Therefore, I was not able to get a population size that reflected this race and age range which makes my independent variables not an accurate reflection of the dependent variable. The other predictor variables were not divided up by race or age range, so they were referring to the entire population, whereas I was just interested in the white population ages 45-64. 
+
+##New Model
+```{r}
+df.new2$Toxic_Chem[df.new2$Toxic_Chem<0] <- NA
+model.fix <- lm(E_Wh_Cancer~Obesity+E_Bl_Cancer+Particulate_Matter_Ind+Poverty.log+scale(No_Exercise)+Few_Fruit_Veg+Toxic_Chem, data=df.new2)
+summary(model.fix)
+```
+  
+  In this revised model to fix diagnostic problems from earlier, I standardized the variable No_Exercise to fix multicollinearity and removed the interaction variable. Additionally, I added a new variable, Toxic_Chem, to see if it will increase the R-squared value of the model. Toxic_Chem measures the amount (in pounds) of total chemical releases that were extracted using TRI Data Explorer software. This new model has not changed much in relation to the original model. The coefficients of the new model are greater for E_Bl_Cancer and smaller for Obesity, Particulate_Matter_Ind, Poverty.log, No_Exercise, and Few_Fruit_Veg. The p-values are smaller for Obesity, E_Bl_Cancer and greater for Particulate_Matter_Ind, No_Exercise, and Few_Fruit_Veg. No_Exercise and Few_Fruit_Veg are not statistically significant in the new model. Looking at model fit statistics, the RMSE is slightly lower for the new model at 2.88 on 765 degrees of freedom and the adjusted R-squared is slightly smaller at 0.416.
+  
+##Diagnostics - New Model
+```{r}
+crPlots(model.fix)
+sqrt(vif(model.fix))
+durbinWatsonTest(model.fix)
+```
+  
+  Looking at CPR plots, non-linearity seems to be worse, existing among even more independent variables. However, multicollinearity was fixed within this new model, as shown by the VIF statistics all being below 10. There is more autocorrelation as well as supported by the smaller p-value of 0.028. Since non-linearity was not a prior diagnostic issue, I would perform a box-cox transformation on E_Wh_Cancer. This would, hopefully, solve the earlier diagnostic problem with non-normality and further fix the issues non-linearity and autocorrelation in the model.
