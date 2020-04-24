@@ -1,0 +1,655 @@
+---
+title: "Dog Vocalizations"
+author: "Kaili Saffran"
+date: "2/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(av)
+require(data.table)
+```
+
+
+```{r}
+# # Accessing data no matter what working directory you are in:
+# library(here)
+# set_here()
+# # enclose data file in here()
+# # create project in Github
+```
+
+
+# Data
+## Emotions/Characteristics expressed by dogs:
+#### Anxiety
+```{r}
+# get information on each WAV file:
+av_media_info("Anxiety_1.wav")
+# convert WAV files to have only one channel:
+data_anx1 <- read_audio_bin("Anxiety_1.wav", channels = 1)
+# plot a frequency plot of the WAV file to see its structure:
+plot(data_anx1, type = 'l')
+
+# -----------------------------------------------------
+# not needed, but cool to look at:
+# # changes WAV file to frequency domain to get a spectrogram:
+# dataf_anx1 <- read_audio_fft("Anxiety_1.wav")
+# dim(dataf_anx1)
+# plot(dataf_anx1)
+# ------------------------------------------------------
+```
+
+
+```{r}
+av_media_info("Anxiety_2.wav")
+data_anx2 <- read_audio_bin("Anxiety_2.wav", channels = 1)
+plot(data_anx2, type = 'l')
+```
+
+```{r}
+# # convert mp3 file to WAV file:
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Anxiety3.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Anxiety3.mp3", output = "Anxiety3.wav", total_time = 12)
+av_media_info("Anxiety3.wav")
+data_anx3 <- read_audio_bin("Anxiety3.wav", channels = 1)
+plot(data_anx3, type = 'l')
+```
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Anxiety4.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Anxiety4.mp3", output = "Anxiety4.wav")
+av_media_info("Anxiety4.wav")
+data_anx4 <- read_audio_bin("Anxiety4.wav", channels = 1)
+plot(data_anx4, type = 'l')
+```
+
+#### Excitement
+```{r}
+av_media_info("Excite_4.wav")
+data_exc4 <- read_audio_bin("Excite_4.wav", channels = 1)
+plot(data_exc4, type = 'l')
+```
+
+
+```{r}
+av_media_info("Excite_6.wav")
+data_exc6 <- read_audio_bin("Excite_6.wav", channels = 1)
+plot(data_exc6, type = 'l')
+```
+
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Excite7.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Excite7.mp3", output = "Excite7.wav", start_time = 0, total_time = 5)
+av_media_info("Excite7.wav")
+data_exc7 <- read_audio_bin("Excite7.wav", channels = 1)
+plot(data_exc7, type = 'l')
+```
+
+
+```{r}
+av_media_info("Excite_10.wav")
+data_exc10 <- read_audio_bin("Excite_10.wav", channels = 1)
+plot(data_exc10, type = 'l')
+```
+
+#### Playful
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Play3.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Play3.mp3", output = "Play3.wav")
+av_media_info("Play3.wav")
+data_play3 <- read_audio_bin("Play3.wav", channels = 1)
+plot(data_play3, type = 'l')
+```
+
+
+```{r}
+av_media_info("Play_5.wav")
+data_play5 <- read_audio_bin("Play_5.wav", channels = 1)
+plot(data_play5, type = 'l')
+```
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Play6.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Play6.mp3", output = "Play6.wav", start_time = 0, total_time = 6)
+av_media_info("Play6.wav")
+data_play6 <- read_audio_bin("Play6.wav", channels = 1)
+plot(data_play6, type = 'l')
+```
+
+```{r}
+av_media_info("Play_1.wav")
+data_play1 <- read_audio_bin("Play_1.wav", channels = 1)
+plot(data_play1, type = 'l')
+```
+
+#### Protection
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Protect1.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Protect1.mp3", output = "Protect1.wav", start_time = 5, total_time = 20)
+av_media_info("Protect1.wav")
+data_protect1 <- read_audio_bin("Protect1.wav", channels = 1)
+plot(data_protect1, type = 'l')
+```
+
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Protect3.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Protect3.mp3", output = "Protect3.wav", start_time = 0, total_time = 11)
+av_media_info("Protect3.wav")
+data_protect3 <- read_audio_bin("Protect3.wav")
+plot(data_protect3, type = 'l')
+```
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Protect4.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Protect4.mp3", output = "Protect4.wav")
+av_media_info("Protect4.wav")
+data_protect4 <- read_audio_bin("Protect4.wav", channels = 1)
+plot(data_protect4, type = 'l')
+```
+
+
+```{r}
+av_media_info("Protect_5.wav")
+data_protect5 <- read_audio_bin("Protect_5.wav")
+plot(data_protect5, type = 'l')
+```
+
+#### Upset/Wants Something
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Upset1.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Upset1.mp3", output = "Upset1.wav")
+av_media_info("Upset1.wav")
+data_upset1 <- read_audio_bin("Upset1.wav", channels = 1)
+plot(data_upset1, type = 'l')
+```
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Upset4.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Upset4.mp3", output = "Upset4.wav")
+av_media_info("Upset4.wav")
+data_upset4 <- read_audio_bin("Upset4.wav", channels = 1)
+plot(data_upset4, type = 'l')
+```
+
+```{r}
+# av_media_info("/Users/kailisaffran/Documents/Dog Vocalizations/Upset6.mp3")
+# av_audio_convert(audio = "/Users/kailisaffran/Documents/Dog Vocalizations/Upset6.mp3", output = "Upset6.wav", total_time = 5)
+av_media_info("Upset6.wav")
+data_upset6 <- read_audio_bin("Upset6.wav")
+plot(data_upset6, type = 'l')
+```
+
+
+```{r}
+av_media_info("Upset_3.wav")
+data_upset3 <- read_audio_bin("Upset_3.wav", channels = 1)
+plot(data_upset3, type = 'l')
+```
+
+# Dynamic Time Warping
+```{r}
+# # this function does not work do to the size of the WAV files:
+# require(dtw)
+# dtwDist
+
+# create zero vectors to get all WAV files to be of the same length:
+# largest WAV file is 594432 elements after referencing the environment:
+a <- 594432-length(data_anx1)
+a2 <- (rep(0, a))
+b <- 594432-length(data_anx2)
+b2 <- (rep(0, b))
+c <- 594432-length(data_anx3)
+c2 <- (rep(0, c))
+d <- 594432-length(data_anx4)
+d2 <- (rep(0, d))
+e <- 594432-length(data_upset1)
+e2 <- (rep(0, e))
+f <- 594432-length(data_upset3)
+f2 <- (rep(0, f))
+g <- 594432-length(data_upset4)
+g2 <- (rep(0, g))
+h <- 594432-length(data_upset6)
+h2 <- (rep(0, h))
+i <- 594432-length(data_exc10)
+i2 <- (rep(0, i))
+j <- 594432-length(data_exc4)
+j2 <- (rep(0, j))
+k <- 594432-length(data_exc6)
+k2 <- (rep(0, k))
+l <- 594432-length(data_exc7)
+l2 <- (rep(0, l))
+m <- 594432-length(data_play1)
+m2 <- (rep(0, m))
+n <- 594432-length(data_play3)
+n2 <- (rep(0, n))
+o <- 594432-length(data_play5)
+o2 <- (rep(0, o))
+p <- 594432-length(data_play6)
+p2 <- (rep(0, p))
+q <- 594432-length(data_protect1)
+q2 <- (rep(0, q))
+r <- 594432-length(data_protect3)
+r2 <- (rep(0, r))
+s <- 594432-length(data_protect4)
+s2 <- (rep(0, s))
+t <- 594432-length(data_protect5)
+t2 <- (rep(0, t))
+
+# ------------------------------------------------------------
+# not needed, convert WAV files to a time series:
+# ts(data = c(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t), class = "mts")
+# ------------------------------------------------------------
+```
+
+
+```{r}
+# --------------------------------------------------------------
+# not needed:
+# create zero matrix with rows representative of each time series and columns the length of largest WAV file:
+# Bark_Matrix <- matrix(0, nrow = 20, ncol = 594432)
+# --------------------------------------------------------------
+
+# add vectors of 0 to end of each WAV file so they all have equal lengths:
+a3 <- append(as.vector(data_anx1), a2, after = length(data_anx1))
+b3 <- append(as.vector(data_anx2), b2, after = length(data_anx2))
+c3 <- append(as.vector(data_anx3), c2, after = length(data_anx3))
+d3 <- append(as.vector(data_anx4), d2, after = length(data_anx4))
+e3 <- append(as.vector(data_upset1), e2, after = length(data_upset1))
+f3 <- append(as.vector(data_upset3), f2, after = length(data_upset3))
+g3 <- append(as.vector(data_upset4), g2, after = length(data_upset4))
+h3 <- append(as.vector(data_upset6), h2, after = length(data_upset6))
+i3 <- append(as.vector(data_exc10), i2, after = length(data_exc10))
+j3 <- append(as.vector(data_exc4), j2, after = length(data_exc4))
+k3 <- append(as.vector(data_exc6), k2, after = length(data_exc6))
+l3 <- append(as.vector(data_exc7), l2, after = length(data_exc7))
+m3 <- append(as.vector(data_play1), m2, after = length(data_play1))
+n3 <- append(as.vector(data_play3), n2, after = length(data_play3))
+o3 <- append(as.vector(data_play5), o2, after = length(data_play5))
+p3 <- append(as.vector(data_play6), p2, after = length(data_play6))
+q3 <- append(as.vector(data_protect1), q2, after = length(data_protect1))
+r3 <- append(as.vector(data_protect3), r2, after = length(data_protect3))
+s3 <- append(as.vector(data_protect4), s2, after = length(data_protect4))
+t3 <- append(as.vector(data_protect5), t2, after = length(data_protect5))
+```
+
+
+```{r}
+# ------------------------------------------------
+# # not needed:
+# # used as a reference:
+# # put rows of new time series into the matrix:
+# Bark_Matrix[1,]  <- a3
+# Bark_Matrix[2,]  <- b3
+# Bark_Matrix[3,]  <- c3
+# Bark_Matrix[4,]  <- d3
+# Bark_Matrix[5,]  <- e3
+# Bark_Matrix[6,]  <- f3
+# Bark_Matrix[7,]  <- g3
+# Bark_Matrix[8,]  <- h3
+# Bark_Matrix[9,]  <- i3
+# Bark_Matrix[10,]  <- j3
+# Bark_Matrix[11,]  <- k3
+# Bark_Matrix[12,]  <- l3
+# Bark_Matrix[13,]  <- m3
+# Bark_Matrix[14,]  <- n3
+# Bark_Matrix[15,]  <- o3
+# Bark_Matrix[16,]  <- p3
+# Bark_Matrix[17,]  <- q3
+# Bark_Matrix[18,]  <- r3
+# Bark_Matrix[19,]  <- s3
+# Bark_Matrix[20,]  <- t3
+# ----------------------------------------------
+
+# create dissimilarity matrix: need to use a different method for dynamic time warping since computer does not have enough memory to run with "dist" function:
+  # Bark_Dist <- dist(Bark_Matrix, method = "DTW")
+```
+
+
+# Manually performing DTW:
+## Options: Simulated Annealing, "L"/Stair, or Random Sampling Method:
+### staircase method:
+### this approach will not find the global minimum:
+### D(i, j) = d(i, j) + min(D(i − 1, j − 1), D(i, j − 1), D(i − 1, j))
+
+# Random Sampling Method: 
+## Used this method because it made the most sense and was most efficient of the methods I discussed and developed
+```{r Sample 4x4 DTW Matrix}
+# ---------------------------------------------------------------------------
+# do not need to run now that we know it works:
+# this is for a smaller matrix to get a path simulation working:
+# use as a reference for real simulation:
+set.seed(1025)
+sample_bark <- matrix(data = sample(c(1:10), 16, replace = TRUE), nrow = 4, ncol = 4, byrow = T)
+
+# Conditions:
+# sample different routes of paths ~ law of large numbers
+# look at distributions and compare
+# store the smallest sum
+# probabilities of going in one direction: 1/3
+
+# bottom left-hand corner is the starting point:
+
+R <- 100
+df_sums <- data.table("Sums" = rep(0, R))
+
+for (r in 1:R) {
+
+#create empty vector to store the path for each simulation:
+path_bark <- c()
+i <- nrow(sample_bark)
+j <- 1
+n <- 1
+start <- sample_bark[i, j]
+path_bark[n] <- start
+
+while (i != 1 | j != ncol(sample_bark)) {
+  if (i != 1 & j != ncol(sample_bark)) {
+    path_1 <- sample_bark[(i - 1), j]
+    path_2 <- sample_bark[i, (j + 1)]
+    path_3 <- sample_bark[(i - 1), (j + 1)]
+    paths <- c(path_1, path_2, path_3)
+    next.place <- sample(paths, 1)
+    if (next.place == path_1) {
+      i <- i - 1
+    } else if (next.place == path_2) {
+      j <- j + 1
+    } else if (next.place == path_3) {
+      i <- i - 1
+      j <- j + 1
+    }
+    path_bark[n + 1] <- next.place
+    n <- n + 1
+  }
+  if (i == 1) {
+    if (j < ncol(sample_bark)) {
+    next.place <- sum(sample_bark[i, (j + 1):ncol(sample_bark)])
+    path_bark[n + 1] <- next.place
+    j <- ncol(sample_bark)
+    }
+  } else if (j == ncol(sample_bark)) {
+    next.place <- sum(sample_bark[1:(i - 1), j])
+    path_bark[n + 1] <- next.place
+    i <- 1
+  }
+  store_sum <- sum(path_bark)
+}
+df_sums$Sums[r] <- store_sum
+}
+store_min <- min(df_sums$Sums)
+# --------------------------------------------------------------------------
+```
+
+
+```{r Finding difference between two time series}
+# --------------------------------------------------------------------
+# not needed: use as reference for real simulation:
+# first did calculations by hand and then compared to code to make sure it worked:
+
+for (row1 in 1:8) {
+   for (row2 in 1:8) {
+     Euc_Dist <- Bark_Matrix[1, row1] - Bark_Matrix[2, row2]
+     Result <- Euc_Dist
+    print(Result)
+   }
+}
+# --------------------------------------------------------------------
+```
+
+
+```{r Creating dissimilarity matrix}
+
+set.seed(1025)
+
+# want to generate matrix as we sample a path:
+# create dissimilarity matrix to store min between times series in:
+Dis_Matrix <- matrix(data = 0, nrow = 20, ncol = 20, byrow = T,
+                     dimnames = list(c("a3","b3","c3","d3","e3","f3","g3","h3","i3","j3","k3","l3","m3","n3",
+                                       "o3","p3","q3","r3","s3","t3"),
+                                     c("a3","b3","c3","d3","e3","f3","g3","h3","i3","j3","k3","l3","m3","n3",
+                                       "o3","p3","q3","r3","s3","t3")))
+
+# create a list of the time series:
+Time_Series <- c(a3,b3,c3,d3,e3,f3,g3,h3,i3,j3,k3,l3,m3,n3,o3,p3,q3,r3,s3,t3)
+col_place <- 0
+row_place <- 1
+x <- 0
+
+for (ts1 in 0:18) {
+  col_place <- col_place + 1
+  x <- x + 1
+  for (ts2 in x:19) {
+    row_place <- row_place + 1
+
+R <- 1
+df_sums <- data.table("Sums" = rep(0, R))
+
+for (r in 1:R) {
+
+path_bark <- c()
+i <- ncol(Bark_Matrix)
+j <- 1
+n <- 1
+start <- Time_Series[j+(ts1*ncol(Bark_Matrix))] - Time_Series[i+(ts2*ncol(Bark_Matrix))]
+path_bark[n] <- start
+
+while (i != 1 | j != ncol(Bark_Matrix)) {
+  if (i != 1 & j != ncol(Bark_Matrix)) {
+    # replace following code by putting it in the if statements:
+    # path_1 <- Time_Series[j+(ts1*ncol(Bark_Matrix))] - Time_Series[(i-1)+(ts2*ncol(Bark_Matrix))]
+    # path_2 <- Time_Series[(j+1)+(ts1*ncol(Bark_Matrix))] - Time_Series[i+(ts2*ncol(Bark_Matrix))]
+    # path_3 <- Time_Series[(j+1)+(ts1*ncol(Bark_Matrix))] - Time_Series[(i-1)+(ts2*ncol(Bark_Matrix))]
+    # paths <- c(path_1, path_2, path_3)
+    next.place <- sample(c("path_1","path_2","path_3"), 1)
+    if (next.place == "path_1") {
+      current.place <- Time_Series[j+(ts1*ncol(Bark_Matrix))] - Time_Series[(i-1)+(ts2*ncol(Bark_Matrix))]
+      i <- i - 1
+      # breaking apart this code piece by piece, for the first step, path_2 and path_3 are equal...problematic:
+      # need to add/fix code so if two paths are equal, it only chooses one:
+    } else if (next.place == "path_2") {
+      current.place <- Time_Series[(j+1)+(ts1*ncol(Bark_Matrix))] - Time_Series[i+(ts2*ncol(Bark_Matrix))]
+      j <- j + 1
+    } else if (next.place == "path_3") {
+      current.place <- Time_Series[(j+1)+(ts1*ncol(Bark_Matrix))] - Time_Series[(i-1)+(ts2*ncol(Bark_Matrix))]
+      i <- i - 1
+      j <- j + 1
+    }
+    path_bark[n + 1] <- current.place
+    n <- n + 1
+  }
+  if (i == 1) {
+    if (j < ncol(Bark_Matrix)) {
+    current.place <- sum(Time_Series[(j+1)+(ts1*ncol(Bark_Matrix)):ncol(Bark_Matrix)+(ts1*ncol(Bark_Matrix))]
+                      - Time_Series[i+(ts2*ncol(Bark_Matrix))])
+    path_bark[n + 1] <- current.place
+    j <- ncol(Bark_Matrix)
+    }
+  } else if (j == ncol(Bark_Matrix)) {
+    current.place <- sum(Time_Series[j+(ts1*ncol(Bark_Matrix))] - 
+                      Time_Series[1+(ts2*ncol(Bark_Matrix)):(i-1)+(ts2*ncol(Bark_Matrix))])
+    path_bark[n + 1] <- current.place
+    i <- 1
+  }
+  store_sum <- sum(path_bark)
+}
+df_sums$Sums[r] <- store_sum
+}
+store_min <- min(df_sums$Sums)
+Dis_Matrix[row_place, col_place] <- store_min
+  }
+}
+
+# save(Dis_Matrix, file = "Dis_Matrix.Rdata")
+# after an hour, ts2 was on 9 and ts1 on 0
+# need a more efficient way
+# this way takes a long time because the loop has to search through the entire vector to compare two time series
+```
+
+
+
+```{r Comparing two time series at a time with a LIST}
+
+# create dissimilarity matrix to store min between times series in:
+Dis_Matrix <- matrix(data = 0, nrow = 20, ncol = 20, byrow = T,
+                     dimnames = list(c("a3","b3","c3","d3","e3","f3","g3","h3","i3","j3","k3","l3","m3","n3",
+                                       "o3","p3","q3","r3","s3","t3"),
+                                     c("a3","b3","c3","d3","e3","f3","g3","h3","i3","j3","k3","l3","m3","n3",
+                                       "o3","p3","q3","r3","s3","t3")))
+
+# create a list of the time series:
+  # Time_Series <- list(a3,b3,c3,d3,e3,f3,g3,h3,i3,j3,k3,l3,m3,n3,o3,p3,q3,r3,s3,t3)
+  # save(Time_Series, file = "Time_Series_Data.Rdata")
+# set column place for filling in the dissimilarity matrix:
+col_place <- 0
+# set row place for filling in the dissimilarity matrix:
+row_place <- 1
+x <- 1
+# time series length:
+TSL <- ncol(Bark_Matrix)
+
+for (ts1 in 1:19) {
+  col_place <- col_place + 1
+  x <- x + 1
+  for (ts2 in x:20) {
+    row_place <- row_place + 1
+
+# Number of simulations:
+R <- 1
+# store the sums of each path:
+df_sums <- data.table("Sums" = rep(0, R))
+
+for (r in 1:R) {
+
+path_bark <- c()
+i <- TSL
+j <- 1
+n <- 1
+start <- Time_Series[[ts1]][1] - Time_Series[[ts2]][TSL]
+path_bark[n] <- start
+
+while (i != 1 | j != TSL) {
+  if (i != 1 & j != TSL) {
+
+    next.place <- sample(c("path_1","path_2","path_3"), 1)
+    if (next.place == "path_1") {
+      current.place <- Time_Series[[ts1]][j] - Time_Series[[ts2]][(i-1)]
+      i <- i - 1
+    } else if (next.place == "path_2") {
+      current.place <- Time_Series[[ts1]][(j+1)] - Time_Series[[ts2]][i]
+      j <- j + 1
+    } else if (next.place == "path_3") {
+      current.place <- Time_Series[[ts1]][(j+1)] - Time_Series[[ts2]][(i-1)]
+      i <- i - 1
+      j <- j + 1
+    }
+    path_bark[n + 1] <- current.place
+    n <- n + 1
+  }
+  if (i == 1) {
+    if (j < TSL) {
+    current.place <- sum(Time_Series[[ts1]][(j+1):TSL]
+                      - Time_Series[[ts2]][i])
+    path_bark[n + 1] <- current.place
+    j <- TSL
+    }
+  } else if (j == TSL) {
+    current.place <- sum(Time_Series[[ts1]][j] - 
+                      Time_Series[[ts2]][1:(i-1)])
+    path_bark[n + 1] <- current.place
+    i <- 1
+  }
+  store_sum <- sum(path_bark)
+}
+df_sums$Sums[r] <- store_sum
+}
+store_min <- min(df_sums$Sums)
+Dis_Matrix[row_place, col_place] <- store_min
+  }
+}
+
+
+# save(Dis_Matrix, file = "Dis_Matrix.Rdata")
+# after an hour, ts2 was on 9 and ts1 on 0 --> no improvement
+# still takes a while to run
+```
+
+
+```{r Most efficient way to do it}
+set.seed(1025)
+
+x <- 1
+difference <- c()
+n <- 0
+for (ts_1 in 1:19) {
+  x <- x + 1
+  for (ts_2 in x:20) {
+    for (i in 1:10000) {
+      length(Time_Series[[1]]) -> TSL
+      
+      sample(
+        x = c(0, 1),
+        size = 2 * TSL,
+        # This is the maximum number needed
+        prob = c(1 / 3, 2 / 3),
+        replace = TRUE
+      ) -> x_s
+      
+      sample(
+        x = c(0, 1),
+        size = 2 * TSL,
+        # This is the maximum number needed
+        prob = c(1 / 3, 2 / 3),
+        replace = TRUE
+      ) -> y_s
+    
+    which(cumsum(x_s) == TSL - 1) -> x_m
+    which(cumsum(y_s) == TSL - 1) -> y_m
+    
+    if (x_m < y_m) {
+      0 -> x_s[(x_m + 1):y_m]
+      x_s[1:y_m] -> x_steps
+      y_s[1:y_m] -> y_steps
+    } else {
+      if (y_m < x_m) {
+        0 -> y_s[(y_m + 1):x_m]
+        y_s[1:x_m] -> y_steps
+        x_s[1:x_m] -> x_steps
+      } else {
+        x_s[1:x_m] -> x_steps
+        y_s[1:y_m] -> y_steps
+      }
+    }
+      cumsum(x_steps) -> x_val
+      cumsum(y_steps) -> y_val
+      
+      Time_Series[[ts_1]][1] - Time_Series[[ts_2]][1] -> difference[i+(10000*n)]
+      sum(Time_Series[[ts_1]][x_val] -
+            Time_Series[[ts_2]][y_val]) + difference[i] -> difference[i+(10000*n)]
+    }
+    n <- n + 1
+  }
+}
+save(difference, file = "difference_data.Rdata")
+```
+
+
+```{r Euclidean Distance}
+
+# this is ultimately what is being calculated above in the for loops that find the difference between points in different time series:
+library(philentropy)
+one <- 1:10
+two <- 5:14
+three <- rbind(one, two)
+distance(three, method = "euclidean")
+
+```
+
+
+```{r Clustering time series}
+
+hclust(Dis_Matrix, method = "complete", members = NULL, labels = TRUE)
+
+```
