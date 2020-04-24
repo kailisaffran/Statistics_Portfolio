@@ -10,5 +10,5 @@ Goal 5: Discipline-Specific Knowledge
   - Outcome 5.3: Conduct a project that addresses a disciplinary question with real data from that field
     + Demonstrated by files 'Final Analytic Project.Rmd,' 'Dog Vocalizations.Rmd,' and 'MATH410_Final Project.Rmd'
     + Research question addressed using real data from healthdata.gov, titled "Community Health Status Report," and provided by the Centers for Disease Control and Prevention
-    + Research questinon addressed manually collecting data from YouTube
+    + Research question addressed manually collecting data from YouTube
     + Research question addressed using real MLB data between 1908 and 2016
