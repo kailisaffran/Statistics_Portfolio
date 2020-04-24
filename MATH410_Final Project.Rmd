@@ -1,0 +1,1052 @@
+---
+title: "MATH410 Project"
+author: "Jacob Tarnowski, Kaili Saffran, and Jacob Vinch"
+date: "4/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(data.table)
+library(DescTools)
+library(tidyverse)
+library(EnvStats)
+
+# Data scraped into an excel file of MLB teams and their statistics since 1908
+df <- fread("/Users/kailisaffran/Documents/Spring 2020/MATH410/all_standings_plus.csv")
+# Remove the federal league teams (they couldn't win the world series)
+df <- df %>%
+  filter(Lg != "FL")
+# Round the team win percentages to the nearest .02
+# Needs to be done so that there is more than one observation for each win percentage which is needed when we use the beta distribution
+df$Win_Per <- RoundTo(df$Win_Per, .02)
+```
+
+```{r}
+# Create a copy of the data frame
+df2 <- df
+# Create a next year column
+df$next_year <- df$Year + 1
+
+# Prepare copy data frame for joining
+# Change the year column in the copy of the data frame (it will match with the next_year column in the original)
+# Change the win percentage in the copy of the data frame (this column doesn't exist in the original, so when it is joined it will get added)
+
+names(df2)[1] <- "next_year"
+names(df2)[6] <- "Next_Win_Perc"
+# Only select necessary columns from the copy of the data frame
+df2 <- df2[,c(1,6,7)]
+
+# Join the data frames by the next year and nickname columns
+# This will put the win percentage of the coming year in the same row as the previous year, so we can compare them
+df <- left_join(df, df2, by = c("next_year", "Nickname"))
+#Take out NA's (due to some seasons being cancelled in some years)
+df <- na.omit(df)
+```
+
+```{r}
+# Number of possible states (.24 - .72) = 49 states
+# We assume that a team can't do better or worse than the worst team ever or the best team ever
+# Make a matrix with 49 columns and 49 rows
+mat1 <- matrix(data = 0, nrow = 49, ncol = 49)
+
+# Create data frame with each win percentage 
+# Because we rounded to the nearest .02, the win percentages we observe increase by .02 from .24 to .72, without missing a value
+# Create alpha and beta columns to store the parameters of the beta distributions fitted to the distribution of win seasons for the following season, given the win percentage of the previous season
+Interval <-data.frame("inter" = unique(df$Win_Per), "alpha" = rep(0,25), "beta" = rep(0,25))
+
+for (i in 1:25) {
+  # Store the observations in which df$win_per is equal to the Interval$inter[i] (which is a win percentage)
+  past_win_perc <- df[df$Win_Per == Interval$inter[i],]
+  # Fit a beta distribution to the distribution of the win percentages for the following season
+beta_Next_Season <- ebeta(past_win_perc$Next_Win_Perc)
+# Store the alpha parameter
+  Interval$alpha[i] <- beta_Next_Season$parameters[1]
+# Store the beta parameter
+  Interval$beta[i] <- beta_Next_Season$parameters[2]
+}
+
+# Model the alpha parameter of the beta distribution given the previous seasons win percentage
+lm_alpha <- lm(alpha ~ inter, data = Interval)
+# Model the beta parameter of the beta distribution given the previous seasons win percentage
+lm_beta <- lm(beta ~ inter, data = Interval)
+
+# Create a data frame with one vector that contains all the states we want to be in our matrix
+extrap <- data.frame("inter" = seq(.24, .72, .01))
+
+# Add a vector to the extrap data frame that contains the predicted alpha values from the model given the win percentages (states) we put in the extrap data frame
+extrap$Pred_Alpha <- predict(lm_alpha, extrap)
+# Add a vector to the extrap data frame that contains the predicted beta values from the model given the win percentages (states) we put in the extrap data frame
+extrap$Pred_Beta <- predict(lm_beta, extrap)
+
+for (i in 1:length(extrap$inter)) {
+# Use the predicted alpha and beta values to find the probability of moving from one state to every other state from the predicted beta distributions
+ cummulative <- pbeta(seq(min(extrap$inter), max(extrap$inter), .01), extrap$Pred_Alpha[i], extrap$Pred_Beta[i])
+  # To find the probabilities, we have to extract them from the cumulative,. We have to subtract the given value from the value after it
+ probs <- cummulative[1]
+  for(j in 1:(length(cummulative) - 1)) {
+    probs <- c(probs, (cummulative[j + 1] - cummulative[j]))
+  }
+  # Store the vector of probabilities in the corresponding row in the matrix
+  mat1[i, ] <- probs
+}
+
+
+```
+
+
+
+```{r}
+# Take the first observation of each team
+Teams <- df[!duplicated(df$Nickname),]
+Teams_first <- unique(Teams$Year)
+Teams_first
+
+Teams08 <- Teams%>%
+  filter(Year == 1908)
+Teams08$ColRow <- 0
+{
+Teams08$ColRow[Teams08$Win_Per == .24 ] <- 1
+Teams08$ColRow[Teams08$Win_Per == .25 ] <- 2
+Teams08$ColRow[Teams08$Win_Per == .26 ] <- 3
+Teams08$ColRow[Teams08$Win_Per == .27 ] <- 4
+Teams08$ColRow[Teams08$Win_Per == .28 ] <- 5
+Teams08$ColRow[Teams08$Win_Per == .29 ] <- 6
+Teams08$ColRow[Teams08$Win_Per == .30 ] <- 7
+Teams08$ColRow[Teams08$Win_Per == .31 ] <- 8
+Teams08$ColRow[Teams08$Win_Per == .32 ] <- 9
+Teams08$ColRow[Teams08$Win_Per == .33 ] <- 10
+Teams08$ColRow[Teams08$Win_Per == .34 ] <- 11
+Teams08$ColRow[Teams08$Win_Per == .35 ] <- 12
+Teams08$ColRow[Teams08$Win_Per == .36 ] <- 13
+Teams08$ColRow[Teams08$Win_Per == .37 ] <- 14
+Teams08$ColRow[Teams08$Win_Per == .38 ] <- 15
+Teams08$ColRow[Teams08$Win_Per == .39 ] <- 16
+Teams08$ColRow[Teams08$Win_Per == .40 ] <- 17
+Teams08$ColRow[Teams08$Win_Per == .41 ] <- 18
+Teams08$ColRow[Teams08$Win_Per == .42 ] <- 19
+Teams08$ColRow[Teams08$Win_Per == .43 ] <- 20
+Teams08$ColRow[Teams08$Win_Per == .44 ] <- 21
+Teams08$ColRow[Teams08$Win_Per == .45 ] <- 22
+Teams08$ColRow[Teams08$Win_Per == .46 ] <- 23
+Teams08$ColRow[Teams08$Win_Per == .47 ] <- 24
+Teams08$ColRow[Teams08$Win_Per == .48 ] <- 25
+Teams08$ColRow[Teams08$Win_Per == .49 ] <- 26
+Teams08$ColRow[Teams08$Win_Per == .50 ] <- 27
+Teams08$ColRow[Teams08$Win_Per == .51 ] <- 28
+Teams08$ColRow[Teams08$Win_Per == .52 ] <- 29
+Teams08$ColRow[Teams08$Win_Per == .53 ] <- 30
+Teams08$ColRow[Teams08$Win_Per == .54 ] <- 31
+Teams08$ColRow[Teams08$Win_Per == .55 ] <- 32
+Teams08$ColRow[Teams08$Win_Per == .56 ] <- 33
+Teams08$ColRow[Teams08$Win_Per == .57 ] <- 34
+Teams08$ColRow[Teams08$Win_Per == .58 ] <- 35
+Teams08$ColRow[Teams08$Win_Per == .59 ] <- 36
+Teams08$ColRow[Teams08$Win_Per == .60 ] <- 37
+Teams08$ColRow[Teams08$Win_Per == .61 ] <- 38
+Teams08$ColRow[Teams08$Win_Per == .62 ] <- 39
+Teams08$ColRow[Teams08$Win_Per == .63 ] <- 40
+Teams08$ColRow[Teams08$Win_Per == .64 ] <- 41
+Teams08$ColRow[Teams08$Win_Per == .65 ] <- 42
+Teams08$ColRow[Teams08$Win_Per == .66 ] <- 43
+Teams08$ColRow[Teams08$Win_Per == .67 ] <- 44
+Teams08$ColRow[Teams08$Win_Per == .68 ] <- 45
+Teams08$ColRow[Teams08$Win_Per == .69 ] <- 46
+Teams08$ColRow[Teams08$Win_Per == .70 ] <- 47
+Teams08$ColRow[Teams08$Win_Per == .71 ] <- 48
+Teams08$ColRow[Teams08$Win_Per == .72 ] <- 49
+}
+
+Teams08 <- Teams08%>%
+  select(Nickname, Lg, Division, ColRow)
+
+
+Teams61 <- Teams%>%
+  filter(Year == 1961)
+Teams61$ColRow <- 0
+
+{
+Teams61$ColRow[Teams61$Win_Per == .24 ] <- 1
+Teams61$ColRow[Teams61$Win_Per == .25 ] <- 2
+Teams61$ColRow[Teams61$Win_Per == .26 ] <- 3
+Teams61$ColRow[Teams61$Win_Per == .27 ] <- 4
+Teams61$ColRow[Teams61$Win_Per == .28 ] <- 5
+Teams61$ColRow[Teams61$Win_Per == .29 ] <- 6
+Teams61$ColRow[Teams61$Win_Per == .30 ] <- 7
+Teams61$ColRow[Teams61$Win_Per == .31 ] <- 8
+Teams61$ColRow[Teams61$Win_Per == .32 ] <- 9
+Teams61$ColRow[Teams61$Win_Per == .33 ] <- 10
+Teams61$ColRow[Teams61$Win_Per == .34 ] <- 11
+Teams61$ColRow[Teams61$Win_Per == .35 ] <- 12
+Teams61$ColRow[Teams61$Win_Per == .36 ] <- 13
+Teams61$ColRow[Teams61$Win_Per == .37 ] <- 14
+Teams61$ColRow[Teams61$Win_Per == .38 ] <- 15
+Teams61$ColRow[Teams61$Win_Per == .39 ] <- 16
+Teams61$ColRow[Teams61$Win_Per == .40 ] <- 17
+Teams61$ColRow[Teams61$Win_Per == .41 ] <- 18
+Teams61$ColRow[Teams61$Win_Per == .42 ] <- 19
+Teams61$ColRow[Teams61$Win_Per == .43 ] <- 20
+Teams61$ColRow[Teams61$Win_Per == .44 ] <- 21
+Teams61$ColRow[Teams61$Win_Per == .45 ] <- 22
+Teams61$ColRow[Teams61$Win_Per == .46 ] <- 23
+Teams61$ColRow[Teams61$Win_Per == .47 ] <- 24
+Teams61$ColRow[Teams61$Win_Per == .48 ] <- 25
+Teams61$ColRow[Teams61$Win_Per == .49 ] <- 26
+Teams61$ColRow[Teams61$Win_Per == .50 ] <- 27
+Teams61$ColRow[Teams61$Win_Per == .51 ] <- 28
+Teams61$ColRow[Teams61$Win_Per == .52 ] <- 29
+Teams61$ColRow[Teams61$Win_Per == .53 ] <- 30
+Teams61$ColRow[Teams61$Win_Per == .54 ] <- 31
+Teams61$ColRow[Teams61$Win_Per == .55 ] <- 32
+Teams61$ColRow[Teams61$Win_Per == .56 ] <- 33
+Teams61$ColRow[Teams61$Win_Per == .57 ] <- 34
+Teams61$ColRow[Teams61$Win_Per == .58 ] <- 35
+Teams61$ColRow[Teams61$Win_Per == .59 ] <- 36
+Teams61$ColRow[Teams61$Win_Per == .60 ] <- 37
+Teams61$ColRow[Teams61$Win_Per == .61 ] <- 38
+Teams61$ColRow[Teams61$Win_Per == .62 ] <- 39
+Teams61$ColRow[Teams61$Win_Per == .63 ] <- 40
+Teams61$ColRow[Teams61$Win_Per == .64 ] <- 41
+Teams61$ColRow[Teams61$Win_Per == .65 ] <- 42
+Teams61$ColRow[Teams61$Win_Per == .66 ] <- 43
+Teams61$ColRow[Teams61$Win_Per == .67 ] <- 44
+Teams61$ColRow[Teams61$Win_Per == .68 ] <- 45
+Teams61$ColRow[Teams61$Win_Per == .69 ] <- 46
+Teams61$ColRow[Teams61$Win_Per == .70 ] <- 47
+Teams61$ColRow[Teams61$Win_Per == .71 ] <- 48
+Teams61$ColRow[Teams61$Win_Per == .72 ] <- 49
+}
+
+Teams61 <- Teams61%>%
+  select(Nickname, Lg, Division, ColRow)
+
+Teams62 <- Teams%>%
+  filter(Year == 1962)
+Teams62$ColRow <- 0
+
+{
+Teams62$ColRow[Teams62$Win_Per == .24 ] <- 1
+Teams62$ColRow[Teams62$Win_Per == .25 ] <- 2
+Teams62$ColRow[Teams62$Win_Per == .26 ] <- 3
+Teams62$ColRow[Teams62$Win_Per == .27 ] <- 4
+Teams62$ColRow[Teams62$Win_Per == .28 ] <- 5
+Teams62$ColRow[Teams62$Win_Per == .29 ] <- 6
+Teams62$ColRow[Teams62$Win_Per == .30 ] <- 7
+Teams62$ColRow[Teams62$Win_Per == .31 ] <- 8
+Teams62$ColRow[Teams62$Win_Per == .32 ] <- 9
+Teams62$ColRow[Teams62$Win_Per == .33 ] <- 10
+Teams62$ColRow[Teams62$Win_Per == .34 ] <- 11
+Teams62$ColRow[Teams62$Win_Per == .35 ] <- 12
+Teams62$ColRow[Teams62$Win_Per == .36 ] <- 13
+Teams62$ColRow[Teams62$Win_Per == .37 ] <- 14
+Teams62$ColRow[Teams62$Win_Per == .38 ] <- 15
+Teams62$ColRow[Teams62$Win_Per == .39 ] <- 16
+Teams62$ColRow[Teams62$Win_Per == .40 ] <- 17
+Teams62$ColRow[Teams62$Win_Per == .41 ] <- 18
+Teams62$ColRow[Teams62$Win_Per == .42 ] <- 19
+Teams62$ColRow[Teams62$Win_Per == .43 ] <- 20
+Teams62$ColRow[Teams62$Win_Per == .44 ] <- 21
+Teams62$ColRow[Teams62$Win_Per == .45 ] <- 22
+Teams62$ColRow[Teams62$Win_Per == .46 ] <- 23
+Teams62$ColRow[Teams62$Win_Per == .47 ] <- 24
+Teams62$ColRow[Teams62$Win_Per == .48 ] <- 25
+Teams62$ColRow[Teams62$Win_Per == .49 ] <- 26
+Teams62$ColRow[Teams62$Win_Per == .50 ] <- 27
+Teams62$ColRow[Teams62$Win_Per == .51 ] <- 28
+Teams62$ColRow[Teams62$Win_Per == .52 ] <- 29
+Teams62$ColRow[Teams62$Win_Per == .53 ] <- 30
+Teams62$ColRow[Teams62$Win_Per == .54 ] <- 31
+Teams62$ColRow[Teams62$Win_Per == .55 ] <- 32
+Teams62$ColRow[Teams62$Win_Per == .56 ] <- 33
+Teams62$ColRow[Teams62$Win_Per == .57 ] <- 34
+Teams62$ColRow[Teams62$Win_Per == .58 ] <- 35
+Teams62$ColRow[Teams62$Win_Per == .59 ] <- 36
+Teams62$ColRow[Teams62$Win_Per == .60 ] <- 37
+Teams62$ColRow[Teams62$Win_Per == .61 ] <- 38
+Teams62$ColRow[Teams62$Win_Per == .62 ] <- 39
+Teams62$ColRow[Teams62$Win_Per == .63 ] <- 40
+Teams62$ColRow[Teams62$Win_Per == .64 ] <- 41
+Teams62$ColRow[Teams62$Win_Per == .65 ] <- 42
+Teams62$ColRow[Teams62$Win_Per == .66 ] <- 43
+Teams62$ColRow[Teams62$Win_Per == .67 ] <- 44
+Teams62$ColRow[Teams62$Win_Per == .68 ] <- 45
+Teams62$ColRow[Teams62$Win_Per == .69 ] <- 46
+Teams62$ColRow[Teams62$Win_Per == .70 ] <- 47
+Teams62$ColRow[Teams62$Win_Per == .71 ] <- 48
+Teams62$ColRow[Teams62$Win_Per == .72 ] <- 49
+}
+
+Teams62 <- Teams62%>%
+  select(Nickname, Lg, Division, ColRow)
+
+Teams69 <- Teams%>%
+  filter(Year == 1969)
+Teams69$ColRow <- 0
+
+{
+Teams69$ColRow[Teams69$Win_Per == .24 ] <- 1
+Teams69$ColRow[Teams69$Win_Per == .25 ] <- 2
+Teams69$ColRow[Teams69$Win_Per == .26 ] <- 3
+Teams69$ColRow[Teams69$Win_Per == .27 ] <- 4
+Teams69$ColRow[Teams69$Win_Per == .28 ] <- 5
+Teams69$ColRow[Teams69$Win_Per == .29 ] <- 6
+Teams69$ColRow[Teams69$Win_Per == .30 ] <- 7
+Teams69$ColRow[Teams69$Win_Per == .31 ] <- 8
+Teams69$ColRow[Teams69$Win_Per == .32 ] <- 9
+Teams69$ColRow[Teams69$Win_Per == .33 ] <- 10
+Teams69$ColRow[Teams69$Win_Per == .34 ] <- 11
+Teams69$ColRow[Teams69$Win_Per == .35 ] <- 12
+Teams69$ColRow[Teams69$Win_Per == .36 ] <- 13
+Teams69$ColRow[Teams69$Win_Per == .37 ] <- 14
+Teams69$ColRow[Teams69$Win_Per == .38 ] <- 15
+Teams69$ColRow[Teams69$Win_Per == .39 ] <- 16
+Teams69$ColRow[Teams69$Win_Per == .40 ] <- 17
+Teams69$ColRow[Teams69$Win_Per == .41 ] <- 18
+Teams69$ColRow[Teams69$Win_Per == .42 ] <- 19
+Teams69$ColRow[Teams69$Win_Per == .43 ] <- 20
+Teams69$ColRow[Teams69$Win_Per == .44 ] <- 21
+Teams69$ColRow[Teams69$Win_Per == .45 ] <- 22
+Teams69$ColRow[Teams69$Win_Per == .46 ] <- 23
+Teams69$ColRow[Teams69$Win_Per == .47 ] <- 24
+Teams69$ColRow[Teams69$Win_Per == .48 ] <- 25
+Teams69$ColRow[Teams69$Win_Per == .49 ] <- 26
+Teams69$ColRow[Teams69$Win_Per == .50 ] <- 27
+Teams69$ColRow[Teams69$Win_Per == .51 ] <- 28
+Teams69$ColRow[Teams69$Win_Per == .52 ] <- 29
+Teams69$ColRow[Teams69$Win_Per == .53 ] <- 30
+Teams69$ColRow[Teams69$Win_Per == .54 ] <- 31
+Teams69$ColRow[Teams69$Win_Per == .55 ] <- 32
+Teams69$ColRow[Teams69$Win_Per == .56 ] <- 33
+Teams69$ColRow[Teams69$Win_Per == .57 ] <- 34
+Teams69$ColRow[Teams69$Win_Per == .58 ] <- 35
+Teams69$ColRow[Teams69$Win_Per == .59 ] <- 36
+Teams69$ColRow[Teams69$Win_Per == .60 ] <- 37
+Teams69$ColRow[Teams69$Win_Per == .61 ] <- 38
+Teams69$ColRow[Teams69$Win_Per == .62 ] <- 39
+Teams69$ColRow[Teams69$Win_Per == .63 ] <- 40
+Teams69$ColRow[Teams69$Win_Per == .64 ] <- 41
+Teams69$ColRow[Teams69$Win_Per == .65 ] <- 42
+Teams69$ColRow[Teams69$Win_Per == .66 ] <- 43
+Teams69$ColRow[Teams69$Win_Per == .67 ] <- 44
+Teams69$ColRow[Teams69$Win_Per == .68 ] <- 45
+Teams69$ColRow[Teams69$Win_Per == .69 ] <- 46
+Teams69$ColRow[Teams69$Win_Per == .70 ] <- 47
+Teams69$ColRow[Teams69$Win_Per == .71 ] <- 48
+Teams69$ColRow[Teams69$Win_Per == .72 ] <- 49
+}
+
+Teams69 <- Teams69%>%
+  select(Nickname, Lg, Division, ColRow)
+
+League69 <- df %>%
+  filter(Year == 1969)%>%
+  arrange(Nickname)
+
+
+
+Teams77 <- Teams%>%
+  filter(Year == 1977)
+
+Teams77$ColRow <- 0
+
+{
+Teams77$ColRow[Teams77$Win_Per == .24 ] <- 1
+Teams77$ColRow[Teams77$Win_Per == .25 ] <- 2
+Teams77$ColRow[Teams77$Win_Per == .26 ] <- 3
+Teams77$ColRow[Teams77$Win_Per == .27 ] <- 4
+Teams77$ColRow[Teams77$Win_Per == .28 ] <- 5
+Teams77$ColRow[Teams77$Win_Per == .29 ] <- 6
+Teams77$ColRow[Teams77$Win_Per == .30 ] <- 7
+Teams77$ColRow[Teams77$Win_Per == .31 ] <- 8
+Teams77$ColRow[Teams77$Win_Per == .32 ] <- 9
+Teams77$ColRow[Teams77$Win_Per == .33 ] <- 10
+Teams77$ColRow[Teams77$Win_Per == .34 ] <- 11
+Teams77$ColRow[Teams77$Win_Per == .35 ] <- 12
+Teams77$ColRow[Teams77$Win_Per == .36 ] <- 13
+Teams77$ColRow[Teams77$Win_Per == .37 ] <- 14
+Teams77$ColRow[Teams77$Win_Per == .38 ] <- 15
+Teams77$ColRow[Teams77$Win_Per == .39 ] <- 16
+Teams77$ColRow[Teams77$Win_Per == .40 ] <- 17
+Teams77$ColRow[Teams77$Win_Per == .41 ] <- 18
+Teams77$ColRow[Teams77$Win_Per == .42 ] <- 19
+Teams77$ColRow[Teams77$Win_Per == .43 ] <- 20
+Teams77$ColRow[Teams77$Win_Per == .44 ] <- 21
+Teams77$ColRow[Teams77$Win_Per == .45 ] <- 22
+Teams77$ColRow[Teams77$Win_Per == .46 ] <- 23
+Teams77$ColRow[Teams77$Win_Per == .47 ] <- 24
+Teams77$ColRow[Teams77$Win_Per == .48 ] <- 25
+Teams77$ColRow[Teams77$Win_Per == .49 ] <- 26
+Teams77$ColRow[Teams77$Win_Per == .50 ] <- 27
+Teams77$ColRow[Teams77$Win_Per == .51 ] <- 28
+Teams77$ColRow[Teams77$Win_Per == .52 ] <- 29
+Teams77$ColRow[Teams77$Win_Per == .53 ] <- 30
+Teams77$ColRow[Teams77$Win_Per == .54 ] <- 31
+Teams77$ColRow[Teams77$Win_Per == .55 ] <- 32
+Teams77$ColRow[Teams77$Win_Per == .56 ] <- 33
+Teams77$ColRow[Teams77$Win_Per == .57 ] <- 34
+Teams77$ColRow[Teams77$Win_Per == .58 ] <- 35
+Teams77$ColRow[Teams77$Win_Per == .59 ] <- 36
+Teams77$ColRow[Teams77$Win_Per == .60 ] <- 37
+Teams77$ColRow[Teams77$Win_Per == .61 ] <- 38
+Teams77$ColRow[Teams77$Win_Per == .62 ] <- 39
+Teams77$ColRow[Teams77$Win_Per == .63 ] <- 40
+Teams77$ColRow[Teams77$Win_Per == .64 ] <- 41
+Teams77$ColRow[Teams77$Win_Per == .65 ] <- 42
+Teams77$ColRow[Teams77$Win_Per == .66 ] <- 43
+Teams77$ColRow[Teams77$Win_Per == .67 ] <- 44
+Teams77$ColRow[Teams77$Win_Per == .68 ] <- 45
+Teams77$ColRow[Teams77$Win_Per == .69 ] <- 46
+Teams77$ColRow[Teams77$Win_Per == .70 ] <- 47
+Teams77$ColRow[Teams77$Win_Per == .71 ] <- 48
+Teams77$ColRow[Teams77$Win_Per == .72 ] <- 49
+}
+
+Teams77 <- Teams77%>%
+  select(Nickname, Lg, Division, ColRow)
+
+Teams95 <- Teams%>%
+  filter(Year == 1995)
+
+Teams95$ColRow <- 0
+
+
+{
+Teams95$ColRow[Teams95$Win_Per == .24 ] <- 1
+Teams95$ColRow[Teams95$Win_Per == .25 ] <- 2
+Teams95$ColRow[Teams95$Win_Per == .26 ] <- 3
+Teams95$ColRow[Teams95$Win_Per == .27 ] <- 4
+Teams95$ColRow[Teams95$Win_Per == .28 ] <- 5
+Teams95$ColRow[Teams95$Win_Per == .29 ] <- 6
+Teams95$ColRow[Teams95$Win_Per == .30 ] <- 7
+Teams95$ColRow[Teams95$Win_Per == .31 ] <- 8
+Teams95$ColRow[Teams95$Win_Per == .32 ] <- 9
+Teams95$ColRow[Teams95$Win_Per == .33 ] <- 10
+Teams95$ColRow[Teams95$Win_Per == .34 ] <- 11
+Teams95$ColRow[Teams95$Win_Per == .35 ] <- 12
+Teams95$ColRow[Teams95$Win_Per == .36 ] <- 13
+Teams95$ColRow[Teams95$Win_Per == .37 ] <- 14
+Teams95$ColRow[Teams95$Win_Per == .38 ] <- 15
+Teams95$ColRow[Teams95$Win_Per == .39 ] <- 16
+Teams95$ColRow[Teams95$Win_Per == .40 ] <- 17
+Teams95$ColRow[Teams95$Win_Per == .41 ] <- 18
+Teams95$ColRow[Teams95$Win_Per == .42 ] <- 19
+Teams95$ColRow[Teams95$Win_Per == .43 ] <- 20
+Teams95$ColRow[Teams95$Win_Per == .44 ] <- 21
+Teams95$ColRow[Teams95$Win_Per == .45 ] <- 22
+Teams95$ColRow[Teams95$Win_Per == .46 ] <- 23
+Teams95$ColRow[Teams95$Win_Per == .47 ] <- 24
+Teams95$ColRow[Teams95$Win_Per == .48 ] <- 25
+Teams95$ColRow[Teams95$Win_Per == .49 ] <- 26
+Teams95$ColRow[Teams95$Win_Per == .50 ] <- 27
+Teams95$ColRow[Teams95$Win_Per == .51 ] <- 28
+Teams95$ColRow[Teams95$Win_Per == .52 ] <- 29
+Teams95$ColRow[Teams95$Win_Per == .53 ] <- 30
+Teams95$ColRow[Teams95$Win_Per == .54 ] <- 31
+Teams95$ColRow[Teams95$Win_Per == .55 ] <- 32
+Teams95$ColRow[Teams95$Win_Per == .56 ] <- 33
+Teams95$ColRow[Teams95$Win_Per == .57 ] <- 34
+Teams95$ColRow[Teams95$Win_Per == .58 ] <- 35
+Teams95$ColRow[Teams95$Win_Per == .59 ] <- 36
+Teams95$ColRow[Teams95$Win_Per == .60 ] <- 37
+Teams95$ColRow[Teams95$Win_Per == .61 ] <- 38
+Teams95$ColRow[Teams95$Win_Per == .62 ] <- 39
+Teams95$ColRow[Teams95$Win_Per == .63 ] <- 40
+Teams95$ColRow[Teams95$Win_Per == .64 ] <- 41
+Teams95$ColRow[Teams95$Win_Per == .65 ] <- 42
+Teams95$ColRow[Teams95$Win_Per == .66 ] <- 43
+Teams95$ColRow[Teams95$Win_Per == .67 ] <- 44
+Teams95$ColRow[Teams95$Win_Per == .68 ] <- 45
+Teams95$ColRow[Teams95$Win_Per == .69 ] <- 46
+Teams95$ColRow[Teams95$Win_Per == .70 ] <- 47
+Teams95$ColRow[Teams95$Win_Per == .71 ] <- 48
+Teams95$ColRow[Teams95$Win_Per == .72 ] <- 49
+}
+
+Teams95 <- Teams95%>%
+  select(Nickname, Lg, Division, ColRow)
+
+
+League95 <- df%>%
+  filter(Year == 1995)%>%
+  arrange(Nickname)
+
+
+Teams98 <- Teams%>%
+  filter(Year == 1998)
+Teams98$ColRow <- 0
+{
+Teams98$ColRow[Teams98$Win_Per == .24 ] <- 1
+Teams98$ColRow[Teams98$Win_Per == .25 ] <- 2
+Teams98$ColRow[Teams98$Win_Per == .26 ] <- 3
+Teams98$ColRow[Teams98$Win_Per == .27 ] <- 4
+Teams98$ColRow[Teams98$Win_Per == .28 ] <- 5
+Teams98$ColRow[Teams98$Win_Per == .29 ] <- 6
+Teams98$ColRow[Teams98$Win_Per == .30 ] <- 7
+Teams98$ColRow[Teams98$Win_Per == .31 ] <- 8
+Teams98$ColRow[Teams98$Win_Per == .32 ] <- 9
+Teams98$ColRow[Teams98$Win_Per == .33 ] <- 10
+Teams98$ColRow[Teams98$Win_Per == .34 ] <- 11
+Teams98$ColRow[Teams98$Win_Per == .35 ] <- 12
+Teams98$ColRow[Teams98$Win_Per == .36 ] <- 13
+Teams98$ColRow[Teams98$Win_Per == .37 ] <- 14
+Teams98$ColRow[Teams98$Win_Per == .38 ] <- 15
+Teams98$ColRow[Teams98$Win_Per == .39 ] <- 16
+Teams98$ColRow[Teams98$Win_Per == .40 ] <- 17
+Teams98$ColRow[Teams98$Win_Per == .41 ] <- 18
+Teams98$ColRow[Teams98$Win_Per == .42 ] <- 19
+Teams98$ColRow[Teams98$Win_Per == .43 ] <- 20
+Teams98$ColRow[Teams98$Win_Per == .44 ] <- 21
+Teams98$ColRow[Teams98$Win_Per == .45 ] <- 22
+Teams98$ColRow[Teams98$Win_Per == .46 ] <- 23
+Teams98$ColRow[Teams98$Win_Per == .47 ] <- 24
+Teams98$ColRow[Teams98$Win_Per == .48 ] <- 25
+Teams98$ColRow[Teams98$Win_Per == .49 ] <- 26
+Teams98$ColRow[Teams98$Win_Per == .50 ] <- 27
+Teams98$ColRow[Teams98$Win_Per == .51 ] <- 28
+Teams98$ColRow[Teams98$Win_Per == .52 ] <- 29
+Teams98$ColRow[Teams98$Win_Per == .53 ] <- 30
+Teams98$ColRow[Teams98$Win_Per == .54 ] <- 31
+Teams98$ColRow[Teams98$Win_Per == .55 ] <- 32
+Teams98$ColRow[Teams98$Win_Per == .56 ] <- 33
+Teams98$ColRow[Teams98$Win_Per == .57 ] <- 34
+Teams98$ColRow[Teams98$Win_Per == .58 ] <- 35
+Teams98$ColRow[Teams98$Win_Per == .59 ] <- 36
+Teams98$ColRow[Teams98$Win_Per == .60 ] <- 37
+Teams98$ColRow[Teams98$Win_Per == .61 ] <- 38
+Teams98$ColRow[Teams98$Win_Per == .62 ] <- 39
+Teams98$ColRow[Teams98$Win_Per == .63 ] <- 40
+Teams98$ColRow[Teams98$Win_Per == .64 ] <- 41
+Teams98$ColRow[Teams98$Win_Per == .65 ] <- 42
+Teams98$ColRow[Teams98$Win_Per == .66 ] <- 43
+Teams98$ColRow[Teams98$Win_Per == .67 ] <- 44
+Teams98$ColRow[Teams98$Win_Per == .68 ] <- 45
+Teams98$ColRow[Teams98$Win_Per == .69 ] <- 46
+Teams98$ColRow[Teams98$Win_Per == .70 ] <- 47
+Teams98$ColRow[Teams98$Win_Per == .71 ] <- 48
+Teams98$ColRow[Teams98$Win_Per == .72 ] <- 49
+}
+
+Teams98 <- Teams98%>%
+  select(Nickname, Lg, Division, ColRow)
+
+
+
+League2013 <- df%>%
+  filter(Year == 2013)%>%
+  arrange(Nickname)
+```
+
+
+```{r}
+# Put in alphabetical order based on nickname
+Teams <- Teams08 %>%
+  arrange(Nickname)
+
+Teams_Original <- Teams
+
+```
+
+Notes:
+1909 -> 1961 Team added
+1961 -> 1962 Team added
+1961 -> 1969 Team added, playoff change, division change
+1969 -> 1977 Team added
+1977 -> 1995 Team added, playoff change
+1995 -> 1998 Team added
+1998 -> 2011 Playoff change
+2011 -> 2013 League change
+
+```{r}
+# Create a place to store the number of teams that did not win a world series in 106 years
+Drought <- c()
+
+sims <- 1000
+# Number of simulations to run (1 simulation = 1 106 year span)
+for (k in 1:sims) {
+
+# Reset the Teams data frame to the original data frame
+Teams <- Teams_Original
+# Create a place to store the teams who win the world series
+winner <- c()
+
+# z is going to represent the year
+z <- 1909
+
+# For the first 60 years of the Cubs drought, the playoffs only consisted of a world series
+# Best of the AL and NL play each other
+  while (z < 1961) {
+    # Simulate the win percentage for each team
+    for (i in 1:length(Teams$Nickname)) {
+      # Sample win percentage for each team using current position and probabilities from matrix
+      Teams$ColRow[i] <- sample(1:49, 1, prob = mat1[Teams$ColRow[i], ])
+    }
+    # Separate AL teams
+    AL <- Teams[Teams$Lg == "AL", ]
+    # Select the AL teams with the highest win percentage
+    Best_AL <- AL$Nickname[AL$ColRow == max(AL$ColRow)]
+    # To fix the issue of multiple teams having the best win percentage we just randomly pick one
+    Best_AL <- sample(Best_AL, 1)
+    
+    # Separate NL teams
+    NL <- Teams[Teams$Lg == "NL", ]
+    # Select the NL teams with the highest win percentage
+    Best_NL <- NL$Nickname[NL$ColRow == max(NL$ColRow)]
+    # To fix the issue of multiple teams having the best win percentage we just randomly pick one
+    Best_NL <- sample(Best_NL, 1)
+    
+    #Make a vector of the Best team in AL and NL
+    WS <- c(Best_AL, Best_NL)
+    #Sample from WS to pick a winner, store in the winner vector in the correct place given the year
+    winner[z] <- sample(WS, 1)
+    # Add one to the year
+    z <- z+ 1 
+    
+  }
+
+## Add in teams that joined in 1961
+Teams <- rbind(Teams, Teams61)
+Teams <- Teams %>%
+  arrange(Nickname)
+
+
+  while (z < 1962) {
+    # Simulate the win percentage for each team
+    for (i in 1:length(Teams$Nickname)) {
+      # Sample win percentate for each team using current position and probabilities from matrix
+      Teams$ColRow[i] <- sample(1:49, 1, prob = mat1[Teams$ColRow[i], ])
+    }
+    # Separate AL teams
+    AL <- Teams[Teams$Lg == "AL", ]
+    # Select the AL teams with the highest win percentage
+    Best_AL <- AL$Nickname[AL$ColRow == max(AL$ColRow)]
+    # To fix the issue of multiple teams having the best win percentage we just randomly pick one
+    Best_AL <- sample(Best_AL, 1)
+    
+    # Separate NL teams
+    NL <- Teams[Teams$Lg == "NL", ]
+    # Select the NL teams with the highest win percentage
+    Best_NL <- NL$Nickname[NL$ColRow == max(NL$ColRow)]
+    # To fix the issue of multiple teams having the best win percentage we just randomly pick one
+    Best_NL <- sample(Best_NL, 1)
+    
+    # Make a vector of the best team in AL and NL
+    WS <- c(Best_AL, Best_NL)
+    # Sample from WS to pick a winner, then store in the winner vector in the correct place, given the year
+    winner[z] <- sample(WS, 1)
+    # Add one to the year
+    z <- z+ 1 
+    
+  }
+
+Teams <- rbind(Teams, Teams62)
+Teams <- Teams %>%
+  arrange(Nickname)
+
+
+while (z < 1969) {
+    # Simulate the win percentage for each team
+    for (i in 1:length(Teams$Nickname)) {
+      # Sample win percentage for each team using current position and probabilities from matrix
+      Teams$ColRow[i] <- sample(1:49, 1, prob = mat1[Teams$ColRow[i], ])
+    }
+    # Separate AL teams
+    AL <- Teams[Teams$Lg == "AL", ]
+    # Select the AL teams with the highest win percentage
+    Best_AL <- AL$Nickname[AL$ColRow == max(AL$ColRow)]
+    # To fix the issue of multiple teams having the best win percentage we just randomly pick one
+    Best_AL <- sample(Best_AL, 1)
+    
+    # Separate NL teams
+    NL <- Teams[Teams$Lg == "NL", ]
+    # Select the NL teams with the highest win percentage
+    Best_NL <- NL$Nickname[NL$ColRow == max(NL$ColRow)]
+    # To fix the issue of multiple teams having the best win percentage we just randomly pick one
+    Best_NL <- sample(Best_NL, 1)
+    
+    # Make a vector of the best team in AL and NL
+    WS <- c(Best_AL, Best_NL)
+    # Sample from WS to pick a winner, then store in the winner vector in the correct place, given the year
+    winner[z] <- sample(WS, 1)
+    # Add one to the year
+    z <- z+ 1 
+    
+  }
+
+
+
+# Update divisions
+Teams <- rbind(Teams, Teams69)
+Teams <- Teams %>%
+  arrange(Nickname)
+Teams$Division <- League69$Division
+
+# For the next 25 years, the best teams from each division in each league made the playoffs (AL East/West, NL East/West)
+
+# Only difference from the previous section is playoff structure
+while (z < 1977) {
+  
+  for (i in 1:length(Teams$Nickname)) {
+      Teams$ColRow[i] <-
+        sample(1:49, 1, prob = mat1[Teams$ColRow[i],])
+  }
+  
+  # Separate the AL
+  AL <- Teams[Teams$Lg == "AL", ]
+  # Separete the AL East
+  AL_East <- AL[AL$Division == "E",]
+  # Find the team with highest win percentage in AL East
+  Best_AL_East <- AL_East$Nickname[AL_East$ColRow == max(AL_East$ColRow)]
+  # In case of a tie, randomly choose 1 team from Best_AL_East
+  ALE <- sample(Best_AL_East,1)
+  
+  # Same thing as the AL East, but with the AL West
+  AL_West <- AL[AL$Division == "W",]
+  Best_AL_West <- AL$Nickname[AL$ColRow == max(AL$ColRow)]
+  ALW <- sample(Best_AL_West,1)
+  
+  # Same thing as the AL, but with the NL
+  NL <- Teams[Teams$Lg == "NL", ]
+  NL_East <- NL[NL$Division == "E",]
+  Best_NL_East <- NL_East$Nickname[NL_East$ColRow == max(NL_East$ColRow)]
+  NLE <- sample(Best_NL_East,1)
+  
+  NL_West <- NL[NL$Division == "W",]
+  Best_NL_West <- NL_West$Nickname[NL_West$ColRow == max(NL_West$ColRow)]
+  NLW <- sample(Best_NL_West,1)
+  
+  # WS is a vector of the best of the AL East/West and NL East/West
+  WS <- c(ALE, ALW, NLE, NLW)
+  # Choose a win by randomly sampling from WS and store it in winner
+  winner[z] <- sample(WS,1)
+z <- z+1
+}
+
+
+Teams <- rbind(Teams, Teams77)
+Teams <- Teams %>%
+  arrange(Nickname)
+
+while (z < 1994) {
+  
+  for (i in 1:length(Teams$Nickname)) {
+      Teams$ColRow[i] <-
+        sample(1:49, 1, prob = mat1[Teams$ColRow[i],])
+  }
+  
+  # Separate the AL
+  AL <- Teams[Teams$Lg == "AL", ]
+  # Separete the AL East
+  AL_East <- AL[AL$Division == "E",]
+  # Find the team with highest win percentage in AL East
+  Best_AL_East <- AL_East$Nickname[AL_East$ColRow == max(AL_East$ColRow)]
+  # In case of a tie, randomly choose 1 team from Best_AL_East
+  ALE <- sample(Best_AL_East,1)
+  
+  # Same thing as the AL East, but with the AL West
+  AL_West <- AL[AL$Division == "W",]
+  Best_AL_West <- AL$Nickname[AL$ColRow == max(AL$ColRow)]
+  ALW <- sample(Best_AL_West,1)
+  
+  # Same thing as the AL, but with the NL
+  NL <- Teams[Teams$Lg == "NL", ]
+  NL_East <- NL[NL$Division == "E",]
+  Best_NL_East <- NL_East$Nickname[NL_East$ColRow == max(NL_East$ColRow)]
+  NLE <- sample(Best_NL_East,1)
+  
+  NL_West <- NL[NL$Division == "W",]
+  Best_NL_West <- NL_West$Nickname[NL_West$ColRow == max(NL_West$ColRow)]
+  NLW <- sample(Best_NL_West,1)
+  
+  # WS is a vector of the best of the AL East/West and NL East/West
+  WS <- c(ALE, ALW, NLE, NLW)
+  # Choose a winner by randomly sampling from WS and store it in winner
+  winner[z] <- sample(WS,1)
+z <- z+1
+}
+
+Teams <- rbind(Teams, Teams95)
+Teams <- Teams %>%
+  arrange(Nickname)
+Teams$Division <- League95$Division
+
+
+# There is now a central division and the playoffs consist of the best of each of the three divisions per league and the best non division winner from each league (a wild card)
+# For the next 17 years
+while (z < 1998) {
+  # Only difference is in playoff structure
+    for (i in 1:length(Teams$Nickname)) {
+      Teams$ColRow[i] <-
+        sample(1:49, 1, prob = mat1[Teams$ColRow[i],])
+  }
+  
+  # Same as previous, but added a central division
+  AL <- Teams[Teams$Lg == "AL", ]
+  AL_East <- AL[AL$Division == "E",]
+  Best_AL_East <- AL_East$Nickname[AL_East$ColRow == max(AL_East$ColRow)]
+  ALE <- sample(Best_AL_East,1)
+  
+   AL_Central <- AL[AL$Division == "C",]
+  Best_AL_Central <- AL_Central$Nickname[AL_Central$ColRow == max(AL_Central$ColRow)]
+  ALC <- sample(Best_AL_Central,1)
+  
+   AL_West <- AL[AL$Division == "W",]
+  Best_AL_West <- AL_West$Nickname[AL_West$ColRow == max(AL_West$ColRow)]
+  ALW <- sample(Best_AL_West,1)
+  
+  # Select all teams that didn't win the division
+  AL_Left <- AL[AL$Nickname != ALE & AL$Nickname != ALC & AL$Nickname != ALW,]
+  # Find the team that had the highest win percentage
+  ALWild <- AL_Left$Nickname[AL_Left$ColRow == max(AL_Left$ColRow)]
+  # In case of a tie, sample from ALWild to randomly choose one
+  ALWild <- sample(ALWild,1)
+  
+  
+  # Same as AL
+  NL <- Teams[Teams$Lg == "NL", ]
+  NL_East <- NL[NL$Division == "E",]
+  Best_NL_East <- NL_East$Nickname[NL_East$ColRow == max(NL_East$ColRow)]
+  NLE <- sample(Best_NL_East,1)
+  
+   NL_Central <- NL[NL$Division == "C",]
+  Best_NL_Central <- NL_Central$Nickname[NL_Central$ColRow == max(NL_Central$ColRow)]
+  NLC <- sample(Best_NL_Central,1)
+  
+   NL_West <- NL[NL$Division == "W",]
+  Best_NL_West <- NL_West$Nickname[NL_West$ColRow == max(NL_West$ColRow)]
+  NLW <- sample(Best_NL_West,1)
+  
+  NL_Left <- NL[NL$Nickname != NLE & NL$Nickname != NLC & NL$Nickname != NLW,]
+  NLWild <- NL_Left$Nickname[NL_Left$ColRow == max(NL_Left$ColRow)]
+  NLWild <- sample(NLWild,1)
+  
+  
+  WS <- c(ALE, ALC, ALW, ALWild, NLE, NLC, NLW, NLWild)
+  winner[z] <- sample(WS,1)
+z <- z+1
+}
+
+Teams <- rbind(Teams, Teams98)
+Teams <- Teams %>%
+  arrange(Nickname)
+
+while (z < 2011) {
+  # Only difference is in playoff structure
+    for (i in 1:length(Teams$Nickname)) {
+      Teams$ColRow[i] <-
+        sample(1:49, 1, prob = mat1[Teams$ColRow[i],])
+  }
+  
+  # Same as previous, but added a central division
+  AL <- Teams[Teams$Lg == "AL", ]
+  AL_East <- AL[AL$Division == "E",]
+  Best_AL_East <- AL_East$Nickname[AL_East$ColRow == max(AL_East$ColRow)]
+  ALE <- sample(Best_AL_East,1)
+  
+   AL_Central <- AL[AL$Division == "C",]
+  Best_AL_Central <- AL_Central$Nickname[AL_Central$ColRow == max(AL_Central$ColRow)]
+  ALC <- sample(Best_AL_Central,1)
+  
+   AL_West <- AL[AL$Division == "W",]
+  Best_AL_West <- AL_West$Nickname[AL_West$ColRow == max(AL_West$ColRow)]
+  ALW <- sample(Best_AL_West,1)
+  
+  # Select all teams that didn't win the division
+  AL_Left <- AL[AL$Nickname != ALE & AL$Nickname != ALC & AL$Nickname != ALW,]
+  # Find the team that had the highest win percentage
+  ALWild <- AL_Left$Nickname[AL_Left$ColRow == max(AL_Left$ColRow)]
+  # In case of a tie, sample from ALWild to randomly choose one
+  ALWild <- sample(ALWild,1)
+  
+  
+  # Same as AL
+  NL <- Teams[Teams$Lg == "NL", ]
+  NL_East <- NL[NL$Division == "E",]
+  Best_NL_East <- NL_East$Nickname[NL_East$ColRow == max(NL_East$ColRow)]
+  NLE <- sample(Best_NL_East,1)
+  
+   NL_Central <- NL[NL$Division == "C",]
+  Best_NL_Central <- NL_Central$Nickname[NL_Central$ColRow == max(NL_Central$ColRow)]
+  NLC <- sample(Best_NL_Central,1)
+  
+   NL_West <- NL[NL$Division == "W",]
+  Best_NL_West <- NL_West$Nickname[NL_West$ColRow == max(NL_West$ColRow)]
+  NLW <- sample(Best_NL_West,1)
+  
+  NL_Left <- NL[NL$Nickname != NLE & NL$Nickname != NLC & NL$Nickname != NLW,]
+  NLWild <- NL_Left$Nickname[NL_Left$ColRow == max(NL_Left$ColRow)]
+  NLWild <- sample(NLWild,1)
+  
+  
+  WS <- c(ALE, ALC, ALW, ALWild, NLE, NLC, NLW, NLWild)
+  winner[z] <- sample(WS,1)
+z <- z+1
+}
+
+# The divisions stay the same
+# For two years (League change in next chunck)
+# In the playoffs now, there are each of the division winners from each league, and then the next best two teams in each league play each other in one game to play in the playoffs
+
+while (z <2013) {
+  # Does not change
+      for (i in 1:length(Teams$Nickname)) {
+      Teams$ColRow[i] <-
+        sample(1:49, 1, prob = mat1[Teams$ColRow[i],])
+  }
+  
+  # Same as in previous simulations
+  AL <- Teams[Teams$Lg == "AL", ]
+  AL_East <- AL[AL$Division == "E",]
+  Best_AL_East <- AL_East$Nickname[AL_East$ColRow == max(AL_East$ColRow)]
+  ALE <- sample(Best_AL_East,1)
+  
+  # Same as in previous simulations
+  AL_Central <- AL[AL$Division == "C",]
+  Best_AL_Central <- AL_Central$Nickname[AL_Central$ColRow == max(AL_Central$ColRow)]
+  ALC <- sample(Best_AL_Central,1)
+  
+  # Same as in previous simulations
+  AL_West <- AL[AL$Division == "W",]
+  Best_AL_West <- AL_West$Nickname[AL_West$ColRow == max(AL_West$ColRow)]
+  ALW <- sample(Best_AL_West,1)
+  
+  # Same as in previous simulation
+  AL_Left <- AL[AL$Nickname != ALE & AL$Nickname != ALC & AL$Nickname != ALW,]
+  ALWild1 <- AL_Left$Nickname[AL_Left$ColRow == max(AL_Left$ColRow)]
+  ALWild1 <- sample(ALWild1,1)
+  
+  # Remove the best non division winner from the AL
+  AL_Left <- AL_Left[AL$Nickname != ALWild1,]
+  # Find the team with the best win percentage left
+  ALWild2 <- AL_Left$Nickname[AL_Left$ColRow == max(AL_Left$ColRow)]
+  # In case of a tie, randomly pick one
+  ALWild2 <- sample(ALWild2,1)
+  
+  # Sample from a vector of the two wild card teams to see who makes the playoffs
+  ALWild <- sample(c(ALWild1, ALWild2), 1)
+  
+  
+  # Same as AL above, but with NL
+  NL <- Teams[Teams$Lg == "NL", ]
+  NL_East <- NL[NL$Division == "E",]
+  Best_NL_East <- NL_East$Nickname[NL_East$ColRow == max(NL_East$ColRow)]
+  NLE <- sample(Best_NL_East,1)
+  
+   NL_Central <- NL[NL$Division == "C",]
+  Best_NL_Central <- NL_Central$Nickname[NL_Central$ColRow == max(NL_Central$ColRow)]
+  NLC <- sample(Best_NL_Central,1)
+  
+   NL_West <- NL[NL$Division == "W",]
+  Best_NL_West <- NL_West$Nickname[NL_West$ColRow == max(NL_West$ColRow)]
+  NLW <- sample(Best_NL_West,1)
+  
+  NL_Left <- NL[NL$Nickname != NLE & NL$Nickname != NLC & NL$Nickname != NLW,]
+  NLWild1 <- NL_Left$Nickname[NL_Left$ColRow == max(NL_Left$ColRow)]
+  NLWild1 <- sample(NLWild1,1)
+  
+  NL_Left <- NL_Left[NL$Nickname != NLWild1,]
+  NLWild2 <- NL_Left$Nickname[NL_Left$ColRow == max(NL_Left$ColRow)]
+  NLWild2 <- sample(NLWild2,1)
+  
+  NLWild <- sample(c(NLWild1, NLWild2), 1)
+  
+  # WS is a vector of the divisions winners for each winner and the Wild Card that won the play in game
+  WS <- c(ALE, ALC, ALW, ALWild, NLE, NLC, NLW, NLWild)
+  # Randomly pick a winner and store it in the winner vector
+  winner[z] <- sample(WS,1)
+# Add 1 to the year
+z <- z + 1
+}
+
+
+
+
+# Update leagues (Astros moved to the AL)
+Teams$Lg <- League2013$Lg
+
+# Everything else stays the same
+while (z < 2016) {
+      for (i in 1:length(Teams$Nickname)) {
+      Teams$ColRow[i] <-
+        sample(1:49, 1, prob = mat1[Teams$ColRow[i],])
+  }
+  
+  AL <- Teams[Teams$Lg == "AL", ]
+  AL_East <- AL[AL$Division == "E",]
+  Best_AL_East <- AL_East$Nickname[AL_East$ColRow == max(AL_East$ColRow)]
+  ALE <- sample(Best_AL_East,1)
+  
+   AL_Central <- AL[AL$Division == "C",]
+  Best_AL_Central <- AL_Central$Nickname[AL_Central$ColRow == max(AL_Central$ColRow)]
+  ALC <- sample(Best_AL_Central,1)
+  
+   AL_West <- AL[AL$Division == "W",]
+  Best_AL_West <- AL_West$Nickname[AL_West$ColRow == max(AL_West$ColRow)]
+  ALW <- sample(Best_AL_West,1)
+  
+  AL_Left <- AL[AL$Nickname != ALE & AL$Nickname != ALC & AL$Nickname != ALW,]
+  ALWild1 <- AL_Left$Nickname[AL_Left$ColRow == max(AL_Left$ColRow)]
+  ALWild1 <- sample(ALWild1,1)
+  
+  AL_Left <- AL_Left[AL$Nickname != ALWild1,]
+  ALWild2 <- AL_Left$Nickname[AL_Left$ColRow == max(AL_Left$ColRow)]
+  ALWild2 <- sample(ALWild2,1)
+  
+  ALWild <- sample(c(ALWild1, ALWild2), 1)
+  
+  
+  
+  NL <- Teams[Teams$Lg == "NL", ]
+  NL_East <- NL[NL$Division == "E",]
+  Best_NL_East <- NL_East$Nickname[NL_East$ColRow == max(NL_East$ColRow)]
+  NLE <- sample(Best_NL_East,1)
+  
+   NL_Central <- NL[NL$Division == "C",]
+  Best_NL_Central <- NL_Central$Nickname[NL_Central$ColRow == max(NL_Central$ColRow)]
+  NLC <- sample(Best_NL_Central,1)
+  
+   NL_West <- NL[NL$Division == "W",]
+  Best_NL_West <- NL_West$Nickname[NL_West$ColRow == max(NL_West$ColRow)]
+  NLW <- sample(Best_NL_West,1)
+  
+  NL_Left <- NL[NL$Nickname != NLE & NL$Nickname != NLC & NL$Nickname != NLW,]
+  NLWild1 <- NL_Left$Nickname[NL_Left$ColRow == max(NL_Left$ColRow)]
+  NLWild1 <- sample(NLWild1,1)
+  
+  NL_Left <- NL_Left[NL$Nickname != NLWild1,]
+  NLWild2 <- NL_Left$Nickname[NL_Left$ColRow == max(NL_Left$ColRow)]
+  NLWild2 <- sample(NLWild2,1)
+  
+  NLWild <- sample(c(NLWild1, NLWild2), 1)
+  
+  
+  WS <- c(ALE, ALC, ALW, ALWild, NLE, NLC, NLW, NLWild)
+  winner[z] <- sample(WS,1)
+z <- z+1
+}
+
+# length of table(winner) is the number of teams who won the WS in this 106 year simulation
+# 30 - length(table(winner)) is the number of teams who didn't win the WS in the 106 year simulation
+# Store the number of teams who did not win in the Drought vector.
+
+Org_WS <- data.frame("Team" = unique(Teams_Original$Nickname))
+WsWinners <- as.data.frame(table(winner))
+names(WsWinners)[1] <- "Team"
+Org_num_wins <- left_join(Org_WS, WsWinners, by = "Team")
+zeros <- Org_num_wins[Org_num_wins$Freq == 0,]
+Drought[k] <- length(zeros$Team)
+}
+for (i in 1:length(Drought)) {
+  if (Drought[i] > 1) {
+    Drought[i] <- 1
+  }
+  
+}
+
+prob <- sum(Drought)/sims
+prob
+```
+
+
